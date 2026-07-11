@@ -1,23 +1,40 @@
 import React from 'react'
-import { useTree, statusOf, valueOf, setValue, rec, STATUS_LABEL } from '../lib/store.js'
+import { useTree, statusOf, valueOf, setValue, rec, staleInfo, STATUS_LABEL } from '../lib/store.js'
 
-const TIER_NAMES = ['Unlocked', 'In Progress', 'Mastered']
+const TIER_NAMES = ['Awakened', 'Adapting', 'Adapted']
+const RANK_LABEL = ['Sealed', 'Awakened', 'Adapting', 'Adapted']
 
 export default function Panel({ skill, onClose }) {
   useTree() // re-render on change
   const status = statusOf(skill)
   const val = valueOf(skill)
   const r = rec(skill.id)
+  const stale = staleInfo(skill)
+  const fellBelow = (r.maxRank || 0) > ['locked', 'unlocked', 'inprogress', 'mastered'].indexOf(status)
 
   return (
     <aside className="panel" key={skill.id}>
       <button className="panel-close" onClick={onClose} aria-label="Close">✕</button>
       <div className={`panel-status ${status}`}>{STATUS_LABEL[status]}</div>
+      {(r.adapt || 0) > 0 && (
+        <div className="panel-adapt" title="fell below a held rank, then re-earned it">⚙ adapted through failure ×{r.adapt}</div>
+      )}
       <h2 className="panel-title">
         <span className="panel-icon">{skill.icon}</span>
         {skill.star && <span className="node-star">✦ </span>}{skill.name}
       </h2>
       <p className="panel-branch">{skill.branch}</p>
+
+      {stale && (
+        <p className={`panel-stale ${stale.kind}`}>
+          {stale.kind === 'stale'
+            ? `⏳ untouched for ${stale.days} days — retest or drop it`
+            : `⚠ adapted ${stale.days} days ago — physical skills perish; re-verify it`}
+        </p>
+      )}
+      {fellBelow && (
+        <p className="panel-memory">The wheel remembers — this was {RANK_LABEL[r.maxRank]} before. Climb back to earn an adaptation ⚙.</p>
+      )}
 
       {skill.unit ? (
         <>
@@ -67,6 +84,15 @@ export default function Panel({ skill, onClose }) {
       )}
 
       {skill.note && <p className="panel-note">{skill.note}</p>}
+      {skill.link && (
+        <a
+          className="panel-link"
+          href={`obsidian://open?vault=${encodeURIComponent('Obsidian Vault')}&file=${encodeURIComponent(skill.link)}`}
+        >
+          ⧉ open in vault: {skill.link}
+        </a>
+      )}
+      {status === 'mastered' && <p className="panel-flavor">It has adapted.</p>}
       <p className="panel-asof">
         {r.asOf ? `last updated ${r.asOf} · ` : ''}synced to vault: System/arbor
       </p>

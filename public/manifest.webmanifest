@@ -1,0 +1,12 @@
+{
+  "name": "ARBOR — living skill tree",
+  "short_name": "ARBOR",
+  "description": "The eight-handled wheel over the vault's goals. It adapts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08080c",
+  "theme_color": "#08080c",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

@@ -14,6 +14,10 @@ export function supported() {
   return 'showDirectoryPicker' in window
 }
 
+function msg(e) {
+  return e && e.message ? e.message : String(e)
+}
+
 async function readJSON(dirHandle, name) {
   const fh = await dirHandle.getFileHandle(name)
   return JSON.parse(await (await fh.getFile()).text())
@@ -26,30 +30,87 @@ async function writeJSON(dirHandle, name, data) {
   await w.close()
 }
 
-export async function readTree(dirHandle) {
-  const realms = (await readJSON(dirHandle, 'realms.json')).realms
-  const skillsDir = await dirHandle.getDirectoryHandle('skills')
-  const skills = []
-  for (const r of REALM_FILES) {
-    const file = await readJSON(skillsDir, r + '.json')
-    for (const s of file.skills) skills.push({ ...s, realm: r })
+// last ~40KB of the progress log — enough for weeks of history without
+// paying to read a file that only ever grows
+async function readLogTail(dirHandle) {
+  try {
+    const fh = await dirHandle.getFileHandle('progress-log.md')
+    const f = await fh.getFile()
+    const start = Math.max(0, f.size - 40000)
+    return await f.slice(start).text()
+  } catch {
+    return ''
   }
-  const progress = await readJSON(dirHandle, 'progress.json')
-  return { realms, skills, progress }
 }
 
-export async function writeProgress(dirHandle, id, rec, line) {
-  const progress = await readJSON(dirHandle, 'progress.json')
-  progress[id] = rec
-  await writeJSON(dirHandle, 'progress.json', progress)
-  if (line) {
-    const fh = await dirHandle.getFileHandle('progress-log.md', { create: true })
-    const file = await fh.getFile()
-    const existing = await file.text()
-    const w = await fh.createWritable()
-    await w.write(existing.replace(/\n*$/, '\n') + line + '\n')
-    await w.close()
+// Tolerant tree read: one broken realm file must never take the whole tree
+// down — agents hand-edit these JSONs. Collect per-file errors instead.
+export async function readTree(dirHandle) {
+  const errors = []
+  let realms = []
+  try {
+    realms = (await readJSON(dirHandle, 'realms.json')).realms || []
+  } catch (e) {
+    errors.push('realms.json: ' + msg(e))
   }
+
+  const skills = []
+  let skillsDir = null
+  try {
+    skillsDir = await dirHandle.getDirectoryHandle('skills')
+  } catch (e) {
+    errors.push('skills/: ' + msg(e))
+  }
+  if (skillsDir) {
+    for (const r of REALM_FILES) {
+      try {
+        const file = await readJSON(skillsDir, r + '.json')
+        for (const s of file.skills) skills.push({ ...s, realm: r })
+      } catch (e) {
+        errors.push('skills/' + r + '.json: ' + msg(e))
+      }
+    }
+  }
+
+  let progress = {}
+  try {
+    progress = await readJSON(dirHandle, 'progress.json')
+  } catch (e) {
+    errors.push('progress.json: ' + msg(e))
+  }
+
+  let season = null
+  try {
+    season = await readJSON(dirHandle, 'season.json') // optional
+  } catch {
+    /* no season file — fine */
+  }
+
+  const log = await readLogTail(dirHandle)
+  return { realms, skills, progress, season, log, errors }
+}
+
+// Writes are serialized through a queue so two debounced flushes can't
+// interleave their read-modify-write of progress.json (lost-update guard —
+// the file is shared with agents, who edit it between app reads).
+let writeQueue = Promise.resolve()
+
+export function writeProgress(dirHandle, id, rec, line) {
+  const job = writeQueue.catch(() => {}).then(async () => {
+    const progress = await readJSON(dirHandle, 'progress.json') // fresh read: keep agent edits to other keys
+    progress[id] = rec
+    await writeJSON(dirHandle, 'progress.json', progress)
+    if (line) {
+      const fh = await dirHandle.getFileHandle('progress-log.md', { create: true })
+      const file = await fh.getFile()
+      const existing = await file.text()
+      const w = await fh.createWritable()
+      await w.write(existing.replace(/\n*$/, '\n') + line + '\n')
+      await w.close()
+    }
+  })
+  writeQueue = job
+  return job
 }
 
 export async function loadSavedHandle() {

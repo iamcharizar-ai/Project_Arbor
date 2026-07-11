@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Atlas from './components/Atlas.jsx'
 import Realm from './components/Realm.jsx'
 import Panel from './components/Panel.jsx'
 import Particles from './components/Particles.jsx'
+import Search from './components/Search.jsx'
+import Wheel from './components/Wheel.jsx'
 import { ClickSpark } from './components/fx.jsx'
-import { useTree, initVault, connectVault, authorizeVault, overallStats } from './lib/store.js'
+import { useTree, initVault, connectVault, authorizeVault, overallStats, weekStats } from './lib/store.js'
 
 function VaultBanner({ tree }) {
   if (tree.syncStatus === 'ready') return null
@@ -35,34 +37,48 @@ export default function App() {
   const tree = useTree()
   const [view, setView] = useState('atlas') // 'atlas' | realmId
   const [selected, setSelected] = useState(null)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [focus, setFocus] = useState(null) // { id, t } — jump target on the realm canvas
 
   useEffect(() => { initVault() }, [])
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') setSelected(null) }
+    const onKey = (e) => {
+      if (e.key === 'Escape') { setSelected(null); setSearchOpen(false) }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearchOpen((s) => !s) }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // search result / quest card → open the realm, select + center the node
+  const goTo = useCallback((skill) => {
+    setSearchOpen(false)
+    setView(skill.realm)
+    setSelected(skill)
+    setFocus({ id: skill.id, t: Date.now() })
+  }, [])
+
   const stats = overallStats(tree)
+  const week = weekStats(tree)
   const vitality = stats.max ? stats.pts / stats.max : 0
   const realm = tree.realms.find((r) => r.id === view)
 
   if (!tree.loaded) {
     return (
       <div className="app loading">
-        <div className="core" style={{ '--v': 0.3 }}><div className="core-glow" /><div className="core-orb" /></div>
-        <p className="loading-text">growing arbor…</p>
+        <Wheel turns={120} size={90} className="loading-wheel" />
+        <p className="loading-text">the wheel turns…</p>
       </div>
     )
   }
 
   return (
-    <div className="app" style={{ '--realm-hue': realm ? realm.hue : 150 }}>
-      <Particles vitality={vitality} hue={realm ? realm.hue : 150} />
+    <div className="app" style={{ '--realm-hue': realm ? realm.hue : 252 }}>
+      <Particles vitality={vitality} hue={realm ? realm.hue : 252} />
       <ClickSpark />
       <header className="topbar">
         <button className="brand" onClick={() => { setView('atlas'); setSelected(null) }}>
-          <span className="brand-mark" />
+          <Wheel turns={stats.pts / 10} size={18} className="brand-wheel" />
           ARBOR
         </button>
         {realm && (
@@ -72,12 +88,15 @@ export default function App() {
           </nav>
         )}
         <div className="top-right">
+          <button className="search-btn" onClick={() => setSearchOpen(true)} title="Find a skill">
+            ⌕ <kbd>Ctrl K</kbd>
+          </button>
           <span className={`sync-dot ${tree.syncStatus === 'ready' ? 'live' : 'off'}`} title="Vault sync status">
             {tree.pending > 0 ? '⇅ syncing' : tree.syncStatus === 'ready' ? '● vault' : '○ offline'}
           </span>
-          <div className="vitality" title={`${stats.pts} / ${stats.max} growth points`}>
-            <div className="vitality-track"><div className="vitality-fill" style={{ width: `${(vitality * 100).toFixed(1)}%` }} /></div>
-            <span className="vitality-num">{(vitality * 100).toFixed(1)}%</span>
+          <div className="vitality" title={`${stats.pts} / ${stats.max} growth points · lifetime ${(vitality * 100).toFixed(1)}%`}>
+            <span className="vitality-num">⚙ {stats.pts}</span>
+            {week.ticks > 0 && <span className="vitality-week">+{week.ticks} this wk</span>}
           </div>
         </div>
       </header>
@@ -85,10 +104,11 @@ export default function App() {
       <VaultBanner tree={tree} />
 
       {view === 'atlas'
-        ? <Atlas onOpen={(id) => setView(id)} />
-        : <Realm key={view} realmId={view} onSelect={setSelected} selectedId={selected?.id} />}
+        ? <Atlas onOpen={(id) => setView(id)} onFocus={goTo} />
+        : <Realm key={view} realmId={view} onSelect={setSelected} selectedId={selected?.id} focus={focus} />}
 
       {selected && <Panel skill={selected} onClose={() => setSelected(null)} />}
+      <Search open={searchOpen} onClose={() => setSearchOpen(false)} onPick={goTo} />
     </div>
   )
 }
