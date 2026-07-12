@@ -129,9 +129,12 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus }) {
     return {
       ...e,
       animated: st === 'inprogress' && lod === 0, // marching dashes are expensive at scale
-      style: { ...EDGE_STYLE[st], ...(e.data.cross ? { strokeDasharray: '4 7', opacity: 0.55 } : {}) },
+      // WINGS keeps trees visually independent — cross-branch prereq edges
+      // only materialize when one of their endpoints is selected
+      hidden: e.data.cross && e.source !== selectedId && e.target !== selectedId,
+      style: { ...EDGE_STYLE[st], ...(e.data.cross ? { strokeDasharray: '4 7', opacity: 0.85 } : {}) },
     }
-  }), [baseEdges, byId, tree.progress, lod])
+  }), [baseEdges, byId, tree.progress, lod, selectedId])
 
   const onNodeClick = useCallback((_, node) => {
     if (node.type === 'skill') onSelect(node.data.skill)
