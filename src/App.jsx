@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import Atlas from './components/Atlas.jsx'
 import Realm from './components/Realm.jsx'
 import Panel from './components/Panel.jsx'
-import Particles from './components/Particles.jsx'
 import Search from './components/Search.jsx'
 import Wheel from './components/Wheel.jsx'
 import { ClickSpark } from './components/fx.jsx'
@@ -74,7 +73,6 @@ export default function App() {
 
   return (
     <div className="app" style={{ '--realm-hue': realm ? realm.hue : 252 }}>
-      <Particles vitality={vitality} hue={realm ? realm.hue : 252} />
       <ClickSpark />
       <header className="topbar">
         <button className="brand" onClick={() => { setView('atlas'); setSelected(null) }}>

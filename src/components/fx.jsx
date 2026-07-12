@@ -71,19 +71,3 @@ export function ClickSpark() {
   }, [])
   return <div ref={ref} className="click-spark-layer" aria-hidden="true" />
 }
-
-/** Cursor spotlight — a soft radial glow that follows the mouse over a container. */
-export function Spotlight({ children, className = '' }) {
-  const ref = useRef(null)
-  useEffect(() => {
-    const el = ref.current
-    const onMove = (e) => {
-      const r = el.getBoundingClientRect()
-      el.style.setProperty('--mx', `${e.clientX - r.left}px`)
-      el.style.setProperty('--my', `${e.clientY - r.top}px`)
-    }
-    el.addEventListener('mousemove', onMove)
-    return () => el.removeEventListener('mousemove', onMove)
-  }, [])
-  return <div ref={ref} className={`spotlight ${className}`}>{children}</div>
-}

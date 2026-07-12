@@ -250,6 +250,10 @@ export function recentEvents(s = state, n = 6) {
 }
 
 // ── writes: optimistic + debounced vault sync + adaptation mechanic ───────
+// A regression only "counts" (and can later earn a ⚙) if it stood for at
+// least this long — quick reversals are treated as mis-click corrections.
+const ADAPT_GRACE_MS = 60 * 60 * 1000
+
 let bursts = {}
 export function burstOf(id) { return bursts[id] || 0 }
 
@@ -305,10 +309,18 @@ export function setValue(skill, value) {
 
   // Mahoraga mechanic: the wheel remembers. Fall below a rank you once held,
   // then climb back — that skill earns a permanent adaptation mark (⚙).
+  // Grace window: a fall must STAND for a while before the climb-back counts.
+  // Undoing a mis-click (click → unclick → click) is a correction, not a
+  // failure — no ⚙ for that.
   const afterRank = RANK[after]
   const prevMax = r.maxRank || 0
-  if (afterRank < prevMax) r.fell = true
-  else if (r.fell && afterRank >= prevMax) { r.adapt = (r.adapt || 0) + 1; r.fell = false }
+  if (afterRank < prevMax) {
+    if (!r.fell) { r.fell = true; r.fellAt = Date.now() }
+  } else if (r.fell && afterRank >= prevMax) {
+    if (Date.now() - (r.fellAt || Date.now()) >= ADAPT_GRACE_MS) r.adapt = (r.adapt || 0) + 1
+    r.fell = false
+    delete r.fellAt
+  }
   r.maxRank = Math.max(prevMax, afterRank)
 
   if (RANK[after] > RANK[before]) {

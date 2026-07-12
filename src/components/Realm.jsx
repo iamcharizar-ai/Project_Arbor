@@ -46,6 +46,31 @@ function BranchLabel({ data }) {
 
 const nodeTypes = { skill: SkillNode, branchLabel: BranchLabel }
 
+// WINGS-style edge: straight line with a small direction arrow midway.
+// Static SVG — no marching-ants animation (pure lag, no information).
+const ArrowEdge = React.memo(function ArrowEdge({ sourceX, sourceY, targetX, targetY, style }) {
+  const mx = (sourceX + targetX) / 2
+  const my = (sourceY + targetY) / 2
+  const ang = (Math.atan2(targetY - sourceY, targetX - sourceX) * 180) / Math.PI
+  return (
+    <g>
+      <path
+        className="react-flow__edge-path"
+        d={`M ${sourceX},${sourceY} L ${targetX},${targetY}`}
+        style={style}
+        fill="none"
+      />
+      <polygon
+        className="edge-arrow"
+        points="-4,-3.2 4.6,0 -4,3.2"
+        transform={`translate(${mx}, ${my}) rotate(${ang})`}
+        fill={style?.stroke || 'rgba(232,230,225,0.3)'}
+      />
+    </g>
+  )
+})
+const edgeTypes = { arrow: ArrowEdge }
+
 const EDGE_STYLE = {
   locked: { stroke: 'rgba(232,230,225,0.09)', strokeWidth: 1.2 },
   unlocked: { stroke: 'rgba(203,213,209,0.45)', strokeWidth: 1.5 },
@@ -128,13 +153,12 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus }) {
     const st = statusOf(byId[e.source], tree.progress)
     return {
       ...e,
-      animated: st === 'inprogress' && lod === 0, // marching dashes are expensive at scale
       // WINGS keeps trees visually independent — cross-branch prereq edges
       // only materialize when one of their endpoints is selected
       hidden: e.data.cross && e.source !== selectedId && e.target !== selectedId,
       style: { ...EDGE_STYLE[st], ...(e.data.cross ? { strokeDasharray: '4 7', opacity: 0.85 } : {}) },
     }
-  }), [baseEdges, byId, tree.progress, lod, selectedId])
+  }), [baseEdges, byId, tree.progress, selectedId])
 
   const onNodeClick = useCallback((_, node) => {
     if (node.type === 'skill') onSelect(node.data.skill)
@@ -146,6 +170,7 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus }) {
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       onNodeClick={onNodeClick}
       onPaneClick={() => onSelect(null)}
       fitView

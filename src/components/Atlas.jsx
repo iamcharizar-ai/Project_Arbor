@@ -1,6 +1,6 @@
 import React from 'react'
 import { useTree, realmStats, overallStats, statusOf, frontierSkills, dailyQuest, weekStats, recentEvents, seasonStats, STATUS_DESC } from '../lib/store.js'
-import { ScrambleText, CountUp, Spotlight } from './fx.jsx'
+import { ScrambleText, CountUp } from './fx.jsx'
 import Wheel from './Wheel.jsx'
 
 function Ring({ pct, hue, size = 54 }) {
@@ -80,7 +80,7 @@ export default function Atlas({ onOpen, onFocus }) {
         </section>
       )}
 
-      <Spotlight className="realm-grid">
+      <div className="realm-grid">
         {tree.realms.map((r, i) => {
           const s = realmStats(r.id, tree)
           const pct = s.max ? s.pts / s.max : 0
@@ -105,7 +105,7 @@ export default function Atlas({ onOpen, onFocus }) {
             </button>
           )
         })}
-      </Spotlight>
+      </div>
 
       {events.length > 0 && (
         <section className="ledger">
