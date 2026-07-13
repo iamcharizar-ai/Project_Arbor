@@ -217,7 +217,13 @@ body {
 /* ─── realm canvas ─── */
 .realm-canvas { position: relative; z-index: 1; flex: 1; }
 .react-flow { background: transparent !important; }
-.handle { opacity: 0; pointer-events: none; width: 1px !important; height: 1px !important; min-width: 0 !important; min-height: 0 !important; border: none !important; background: transparent !important; }
+/* both handles pinned to the circle center — ArrowEdge trims lines back to the rim */
+.handle {
+  opacity: 0; pointer-events: none; width: 1px !important; height: 1px !important;
+  min-width: 0 !important; min-height: 0 !important; border: none !important; background: transparent !important;
+  top: 50% !important; left: 50% !important; bottom: auto !important; right: auto !important;
+  transform: translate(-50%, -50%) !important;
+}
 
 .realm-hud {
   position: absolute; left: 20px; bottom: 18px; z-index: 6; pointer-events: none;
@@ -235,9 +241,9 @@ body {
 .realm-filter:hover { color: var(--text); }
 .realm-filter.on { color: var(--inprogress); border-color: rgba(154,140,245,0.5); background: rgba(154,140,245,0.1); }
 
-/* WINGS-style circle node */
+/* WINGS-style circle node — just the circle, no text on the canvas */
 .sk {
-  display: flex; flex-direction: column; align-items: center; width: 112px;
+  width: 52px; height: 52px;
   cursor: pointer;
   animation: nodeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--d, 0) * 55ms);
@@ -263,32 +269,22 @@ body {
   position: absolute; bottom: -4px; right: -4px; font-size: 11px; color: var(--inprogress);
   text-shadow: 0 0 8px rgba(154,140,245,0.9);
 }
-.sk-label {
-  margin-top: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
-  text-align: center; line-height: 1.25; max-width: 112px;
-}
-.sk-sub { margin-top: 2px; font-size: 9.5px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-
 .sk.locked .sk-circle { border-style: dashed; opacity: 0.75; }
 .sk.locked .sk-icon { filter: grayscale(1) brightness(0.55); }
-.sk.locked .sk-label { color: var(--text-dim); }
 .sk.locked { opacity: 0.7; }
 
 .sk.unlocked .sk-circle { border-color: var(--unlocked); box-shadow: 0 0 18px -8px rgba(203,213,209,0.6); }
-.sk.unlocked .sk-sub { color: var(--unlocked); }
 
 .sk.inprogress .sk-circle {
   border-color: var(--inprogress);
   box-shadow: 0 0 20px -4px rgba(154,140,245,0.7);
 }
-.sk.inprogress .sk-sub { color: var(--inprogress); }
 
 .sk.mastered .sk-circle {
   border-color: var(--mastered);
   background: radial-gradient(circle at 38% 32%, #2a2415, #14110a 72%);
   box-shadow: 0 0 24px -6px rgba(224,195,106,0.6);
 }
-.sk.mastered .sk-sub { color: var(--mastered); }
 .sk.mastered .sk-circle::after {
   content: ''; position: absolute; inset: -5px; border-radius: 50%; pointer-events: none;
   border: 1.5px solid rgba(224,195,106,0.4);
@@ -307,8 +303,6 @@ body {
 /* ─── zoom level-of-detail: kill text + infinite animations when far out.
    Hundreds of glowPulse/conic-sweep animations + 500 text layers at 0.3×
    zoom was the whole "laggy when zoomed out" bug. ─── */
-.rf-lod-1 .sk-sub, .rf-lod-2 .sk-sub,
-.rf-lod-2 .sk-label { display: none; }
 .rf-lod-1 .sk, .rf-lod-2 .sk { animation: none; }
 .rf-lod-1 .sk-circle, .rf-lod-2 .sk-circle {
   box-shadow: none !important;

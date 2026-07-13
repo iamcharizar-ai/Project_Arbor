@@ -11,8 +11,11 @@
 //     organism, like the reference.
 //  4. Branch titles go wherever there IS space next to the block — right,
 //     left, above — never hardcoded below it.
-export const GX = 88 // px per lattice column
-export const GY = 52 // px per lattice row (vertical edge spans 2 rows)
+// GX must equal GY: a unit diagonal step (±1,+1) is then a true 45° line,
+// and every edge the layout can emit is either 45°, vertical, or horizontal —
+// the symmetric diamond lattice.
+export const GX = 64 // px per lattice column
+export const GY = 64 // px per lattice row (vertical edge spans 2 rows)
 
 const K = (x, y) => x + ',' + y
 const even = (n) => ((n % 2) + 2) % 2 === 0

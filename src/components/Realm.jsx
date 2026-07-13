@@ -2,21 +2,24 @@ import React, { useMemo, useCallback, useEffect, useState } from 'react'
 import { ReactFlow, Background, Handle, Position, useReactFlow, useNodesInitialized, ReactFlowProvider, useStore } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { layoutRealm } from '../lib/layout.js'
-import { useTree, statusOf, valueOf, burstOf, rec, frontierSkills } from '../lib/store.js'
+import { useTree, statusOf, burstOf, rec, frontierSkills } from '../lib/store.js'
 import { ScrambleText } from './fx.jsx'
 
-// WINGS-style node: icon circle + status ring, name beneath. Memoized hard —
-// with ~290 nodes on screen, re-rendering all of them on every selection or
-// tick was the zoom-out lag. Only nodes whose props actually changed re-render.
+// WINGS-style node: bare icon circle + status ring — no text on the canvas,
+// the side panel carries name/detail. Memoized hard — with ~290 nodes on
+// screen, re-rendering all of them on every selection or tick was the
+// zoom-out lag. Only nodes whose props actually changed re-render.
+// Both handles sit at the circle's CENTER: edges are then trimmed back to
+// the rim in ArrowEdge, so every link touches the circle exactly where the
+// 45°/vertical lattice line crosses it.
 const SkillNode = React.memo(
   function SkillNode({ data, selected }) {
     const skill = data.skill
-    const sub = skill.unit ? `${data.val}/${skill.t[2]} ${skill.unit}` : null
     return (
       <div
         className={`sk ${data.status} ${selected ? 'selected' : ''} ${data.dim ? 'dim' : ''}`}
         style={{ '--d': data.depth }}
-        title={skill.note || skill.name}
+        title={skill.name}
       >
         <Handle type="target" position={Position.Bottom} className="handle" />
         <Handle type="source" position={Position.Top} className="handle" />
@@ -26,15 +29,12 @@ const SkillNode = React.memo(
           {skill.star && <span className="sk-star">✦</span>}
           {data.adapt > 0 && <span className="sk-adapt" title={`adapted through failure ×${data.adapt}`}>⚙</span>}
         </div>
-        <span className="sk-label">{skill.name}</span>
-        {sub && <span className="sk-sub">{sub}</span>}
       </div>
     )
   },
   (a, b) =>
     a.selected === b.selected &&
     a.data.status === b.data.status &&
-    a.data.val === b.data.val &&
     a.data.burst === b.data.burst &&
     a.data.adapt === b.data.adapt &&
     a.data.dim === b.data.dim,
@@ -48,15 +48,28 @@ const nodeTypes = { skill: SkillNode, branchLabel: BranchLabel }
 
 // WINGS-style edge: straight line with a small direction arrow midway.
 // Static SVG — no marching-ants animation (pure lag, no information).
+// Endpoints arrive at the circle CENTERS (see SkillNode handles) and get
+// trimmed back by R so the line starts/ends on the rim — on diagonal links
+// that's exactly the circle's 45° point, giving the symmetric diamond look.
+const RIM = 30 // circle radius (26) + breathing room
 const ArrowEdge = React.memo(function ArrowEdge({ sourceX, sourceY, targetX, targetY, style }) {
-  const mx = (sourceX + targetX) / 2
-  const my = (sourceY + targetY) / 2
-  const ang = (Math.atan2(targetY - sourceY, targetX - sourceX) * 180) / Math.PI
+  const dx = targetX - sourceX
+  const dy = targetY - sourceY
+  const len = Math.hypot(dx, dy) || 1
+  const ux = dx / len
+  const uy = dy / len
+  const sx = sourceX + ux * RIM
+  const sy = sourceY + uy * RIM
+  const tx = targetX - ux * RIM
+  const ty = targetY - uy * RIM
+  const mx = (sx + tx) / 2
+  const my = (sy + ty) / 2
+  const ang = (Math.atan2(dy, dx) * 180) / Math.PI
   return (
     <g>
       <path
         className="react-flow__edge-path"
-        d={`M ${sourceX},${sourceY} L ${targetX},${targetY}`}
+        d={`M ${sx},${sy} L ${tx},${ty}`}
         style={style}
         fill="none"
       />
@@ -109,7 +122,7 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus }) {
   useEffect(() => {
     if (!focus || !nodesInitialized) return
     const n = baseNodes.find((x) => x.id === focus.id)
-    if (n) setCenter(n.position.x + 64, n.position.y + 30, { zoom: 1.05, duration: 600 })
+    if (n) setCenter(n.position.x + 26, n.position.y + 26, { zoom: 1.05, duration: 600 })
   }, [focus, nodesInitialized, baseNodes, setCenter])
 
   const frontierSet = useMemo(
@@ -136,7 +149,6 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus }) {
         data: {
           ...n.data,
           status,
-          val: valueOf(skill),
           burst: burstOf(skill.id),
           adapt: rec(skill.id).adapt || 0,
           dim,
