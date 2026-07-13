@@ -35,17 +35,9 @@ body {
   width: 100%; height: 100%; overflow: visible;
   transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.wheel-rim { fill: none; stroke: var(--mastered); stroke-width: 2.4; opacity: 0.85; }
-.wheel-rim.thin { stroke-width: 1; opacity: 0.35; }
-.wheel-spoke { stroke: var(--mastered); stroke-width: 1.6; opacity: 0.55; }
-.wheel-handle { fill: var(--mastered); opacity: 0.9; }
-.wheel-pin { fill: var(--bg); stroke: var(--mastered); stroke-width: 0.8; }
-.wheel-hub { fill: var(--bg-soft); stroke: var(--mastered); stroke-width: 2; }
-.wheel-eye { fill: var(--inprogress); }
 .hero-wheel { margin: 0 auto 26px; filter: drop-shadow(0 0 22px rgba(224, 195, 106, 0.4)); }
 .loading-wheel .wheel-svg { animation: wheelSpin 3.5s linear infinite; }
 .brand-wheel { display: inline-grid; }
-.brand-wheel .wheel-rim, .brand-wheel .wheel-spoke { stroke-width: 4; }
 @keyframes wheelSpin { to { transform: rotate(360deg); } }
 
 /* ─── click spark ─── */
