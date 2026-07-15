@@ -313,7 +313,11 @@ body {
 .rf-lod-2 .sk-star, .rf-lod-2 .sk-adapt { display: none; }
 .rf-lod-1 .sk:hover .sk-circle, .rf-lod-2 .sk:hover .sk-circle { transform: none; }
 .rf-lod-2 .branch-label { opacity: 0.5; }
-.rf-lod-2 .edge-arrow { display: none; }
+/* v2.2 added a per-edge arrow polygon — ~120 of them on the calisthenics realm.
+   They only carry direction info once you're zoomed in enough to read the graph
+   (lod-0); at any overview zoom they're sub-pixel decoration that still costs a
+   full SVG re-rasterize every zoom/pan frame. Cull from lod-1 as well as lod-2. */
+.rf-lod-1 .edge-arrow, .rf-lod-2 .edge-arrow { display: none; }
 
 .branch-label {
   font-size: 15px; font-weight: 300; letter-spacing: 0.5em; text-transform: uppercase;
