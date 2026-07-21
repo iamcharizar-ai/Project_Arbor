@@ -85,10 +85,10 @@ const ArrowEdge = React.memo(function ArrowEdge({ sourceX, sourceY, targetX, tar
 const edgeTypes = { arrow: ArrowEdge }
 
 const EDGE_STYLE = {
-  locked: { stroke: 'rgba(232,230,225,0.09)', strokeWidth: 1.2 },
-  unlocked: { stroke: 'rgba(203,213,209,0.45)', strokeWidth: 1.5 },
-  inprogress: { stroke: 'rgba(154,140,245,0.55)', strokeWidth: 1.5 },
-  mastered: { stroke: 'rgba(224,195,106,0.7)', strokeWidth: 1.7 },
+  locked: { stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1.5 },
+  unlocked: { stroke: 'rgba(250, 204, 21, 0.55)', strokeWidth: 2 },
+  inprogress: { stroke: 'rgba(244, 114, 182, 0.6)', strokeWidth: 2 },
+  mastered: { stroke: 'rgba(163, 230, 53, 0.7)', strokeWidth: 2.2 },
 }
 
 const FILTERS = [
@@ -195,7 +195,7 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus }) {
       onlyRenderVisibleElements
       proOptions={{ hideAttribution: true }}
     >
-      <Background variant="dots" gap={38} size={1} color="rgba(232,230,225,0.05)" />
+      <Background variant="dots" gap={40} size={1.2} color="rgba(255,255,255,0.06)" />
     </ReactFlow>
   )
 }

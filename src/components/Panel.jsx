@@ -38,6 +38,7 @@ export default function Panel({ skill, onClose }) {
 
       {skill.unit ? (
         <>
+          {/* ── Retro Arcade Stepper ── */}
           <div className="panel-current">
             <button className="step" onClick={() => setValue(skill, val - 1)}>−</button>
             <div className="panel-value">
@@ -64,6 +65,7 @@ export default function Panel({ skill, onClose }) {
           </div>
         </>
       ) : (
+        /* ── Chunky Toggle Buttons ── */
         <div className="tier-list">
           {['u', 'p', 'm'].map((k, i) => {
             const hit = val >= i + 1

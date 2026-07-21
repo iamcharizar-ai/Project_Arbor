@@ -4,14 +4,16 @@ import { ScrambleText, CountUp } from './fx.jsx'
 import Wheel from './Wheel.jsx'
 import { motion } from 'framer-motion'
 
-function Ring({ pct, hue, size = 54 }) {
-  const deg = pct * 360
+function Ring({ pct, hue, size = 58 }) {
+  // Brutalist square progress block — solid color fill from bottom
+  const fillPct = Math.round(pct * 100)
+  const color = `hsl(${hue} 70% 55%)`
   return (
     <div className="ring" style={{
       width: size, height: size,
-      background: `conic-gradient(hsl(${hue} 55% 62%) ${deg}deg, rgba(255,255,255,0.07) ${deg}deg)`,
+      background: `linear-gradient(to top, ${color} ${fillPct}%, transparent ${fillPct}%)`,
     }}>
-      <span>{Math.round(pct * 100)}<em>%</em></span>
+      <span>{fillPct}<em>%</em></span>
     </div>
   )
 }
