@@ -8,7 +8,10 @@ export function ScrambleText({ text, className = '', speed = 28 }) {
   useEffect(() => {
     const GLYPHS = '!<>-_\\/[]{}—=+*^?#░▒▓'
     let frame = 0
-    let raf
+    let timer
+    // setTimeout (not rAF) drives this so it still resolves when the tab is
+    // backgrounded mid-scramble — rAF pauses while hidden and would freeze the
+    // headline as unreadable glyphs.
     const tick = () => {
       frame++
       const resolved = Math.floor(frame / 2)
@@ -19,10 +22,11 @@ export function ScrambleText({ text, className = '', speed = 28 }) {
         else s += GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
       }
       setOut(s)
-      if (resolved < text.length) raf = setTimeout(() => requestAnimationFrame(tick), speed)
+      if (resolved < text.length) timer = setTimeout(tick, speed)
+      else setOut(text) // guarantee a clean final string
     }
     tick()
-    return () => clearTimeout(raf)
+    return () => clearTimeout(timer)
   }, [text, speed])
   return <span className={className}>{out}</span>
 }

@@ -27,7 +27,7 @@ function VaultBanner({ tree }) {
   }
   return (
     <div className="vault-banner">
-      <span>Not connected to the vault — showing {tree.skills.length ? 'a cached' : 'no'} tree. Ticks won't save until connected.</span>
+      <span>Showing the bundled snapshot. Connect the vault to sync live edits and save ticks.</span>
       <button onClick={connectVault}>Connect vault folder (System/arbor)</button>
     </div>
   )

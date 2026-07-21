@@ -1,11 +1,16 @@
 import { useSyncExternalStore } from 'react'
 import * as vault from './vaultSync.js'
+import { BUNDLED } from './bundledTree.js'
 
-// ── vault-backed store ────────────────────────────────────────────────────
-// Tree definition + progress live in the Obsidian vault (System/arbor/*).
-// Sync is via the File System Access API (vaultSync.js) — serverless, works
-// identically on localhost and the static Vercel deploy. localStorage is
-// only an offline read cache.
+// ── vault-backed store, bundled-tree base ──────────────────────────────────
+// The tree ALWAYS renders: realms + skills come from a build-time snapshot
+// (bundledTree.js, mirrored from the vault into data/). When the vault is
+// connected via the File System Access API (vaultSync.js) it OVERLAYS live
+// realms/skills/progress on top of that base — so a fresh Vercel load or a
+// browser that forgot the folder handle still shows the full tree instead of
+// an empty shell. localStorage persists progress ticks between sessions.
+//
+// Progress precedence: vault (if connected) → localStorage → bundled seed.
 
 const CACHE_KEY = 'arbor-tree-cache-v3'
 
@@ -17,9 +22,9 @@ let state = {
   error: null,
   fileErrors: [], // per-file read problems (one broken JSON ≠ dead tree)
   syncStatus: vault.supported() ? 'disconnected' : 'unsupported', // disconnected | need-perm | ready | unsupported
-  realms: [],
-  skills: [],
-  progress: {},
+  realms: BUNDLED.realms,
+  skills: BUNDLED.skills,
+  progress: BUNDLED.progress,
   season: null, // optional System/arbor/season.json: { name, ends, ids: [] }
   logLines: [], // parsed tail of progress-log.md (the momentum layer)
   pending: 0,
@@ -32,23 +37,30 @@ export function subscribe(l) { listeners.add(l); return () => listeners.delete(l
 export function getState() { return state }
 export function useTree() { return useSyncExternalStore(subscribe, getState) }
 
+// Only progress is cached — realms/skills always come from the bundle (or the
+// vault), so a redeployed/edited tree is never masked by a stale cached copy.
 function cache() {
-  localStorage.setItem(CACHE_KEY, JSON.stringify({ realms: state.realms, skills: state.skills, progress: state.progress }))
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ progress: state.progress })) } catch { /* quota/private mode */ }
 }
 
 function loadCache() {
-  const c = localStorage.getItem(CACHE_KEY)
-  return c ? JSON.parse(c) : null
+  try {
+    const c = localStorage.getItem(CACHE_KEY)
+    return c ? JSON.parse(c) : null
+  } catch { return null }
 }
 
 export async function initVault() {
+  // Base layer: bundled tree + (bundled seed overlaid by) any cached progress.
+  const c = loadCache()
+  state = { ...state, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
+
   const { handle: h, status } = await vault.loadSavedHandle()
   handle = h
   if (status === 'ready') {
-    await pullTree()
+    await pullTree() // live vault overlays the base
   } else {
-    const c = loadCache()
-    state = { ...state, loaded: true, syncStatus: status, ...(c || {}) }
+    state = { ...state, loaded: true, syncStatus: status }
     emit()
   }
   startAutoRefresh()
@@ -72,12 +84,13 @@ async function pullTree() {
     }
     if (!fatal) cache()
     else {
+      // vault unreadable → keep the bundled tree visible, overlay cached progress
       const c = loadCache()
-      state = { ...state, ...(c || {}) }
+      state = { ...state, realms: BUNDLED.realms, skills: BUNDLED.skills, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
     }
   } catch (e) {
     const c = loadCache()
-    state = { ...state, loaded: true, error: 'Could not read the vault folder — ' + (e?.message || e), ...(c || {}) }
+    state = { ...state, loaded: true, error: 'Could not read the vault folder — ' + (e?.message || e), realms: BUNDLED.realms, skills: BUNDLED.skills, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
   }
   emit()
 }

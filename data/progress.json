@@ -24,5 +24,12 @@
     "asOf": "2026-07-20",
     "lvl": 1,
     "maxRank": 1
+  },
+  "one-arm-pushup": {
+    "asOf": "2026-07-21",
+    "cur": 0,
+    "maxRank": 3,
+    "fell": true,
+    "fellAt": 1784634549508
   }
 }
