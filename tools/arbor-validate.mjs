@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const ROOT = process.argv[2] || 'G:\\My Drive\\My Files\\Obsidian Vault\\System\\arbor'
-const REALMS = ['cal', 'mob', 'mov', 'mus', 'aes', 'dex', 'tec', 'wel', 'soc']
+const REALMS = ['cal', 'mob', 'mov', 'mus', 'aes', 'dex', 'tec', 'car', 'fin', 'bok', 'soc']
 
 let errors = 0
 const fail = (msg) => { errors++; console.error('  ✗ ' + msg) }

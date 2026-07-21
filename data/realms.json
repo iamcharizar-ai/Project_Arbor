@@ -1,5 +1,5 @@
 {
-  "_comment": "ARBOR realm registry. Agent-editable. hue = HSL hue for the realm's accent. end = the domain's reasonable end goal, shown on the atlas.",
+  "_comment": "ARBOR realm registry. Agent-editable. hue = HSL hue for the realm's accent. end = the domain's reasonable end goal, shown on the atlas. NOTE: adding/removing a realm ALSO requires updating REALM_FILES in the app's src/lib/vaultSync.js and the REALMS array in tools/arbor-validate.mjs — the loader iterates a hardcoded list.",
   "realms": [
     { "id": "cal", "name": "Calisthenics", "sub": "push · pull · core · legs", "hue": 140, "end": "The triple crown: planche push-up, one-arm pull-up, full front lever" },
     { "id": "mob", "name": "Mobility & Balance", "sub": "flexibility · yoga · arm balances", "hue": 170, "end": "Both splits, firefly, scorpion — a bendy, balanced body" },
@@ -8,7 +8,9 @@
     { "id": "aes", "name": "Aesthetics", "sub": "physique · skin · presence", "hue": 330, "end": "AAA physique, glass skin, benchmark-tier presence" },
     { "id": "dex", "name": "Dexterity & Tricks", "sub": "hands · props · party skills", "hue": 55, "end": "Five party-grade skill combos on film" },
     { "id": "tec", "name": "Tech & Craft", "sub": "code · AI · maker", "hue": 200, "end": "AI engineer who ships — a portfolio that gets interviews" },
-    { "id": "wel", "name": "Wealth & Career", "sub": "empire ladder · placement", "hue": 90, "end": "Equity that buys the villa — ₹25–35 Cr net worth by 2033" },
+    { "id": "car", "name": "Career", "sub": "placement · CAT · interviews", "hue": 90, "end": "A signed placement offer on an A-grade PS2 — the credential floor cleared" },
+    { "id": "fin", "name": "Finance", "sub": "Etsy store · family ventures", "hue": 45, "end": "Income that isn't a salary: the shop live, family ventures papered, the house fund alive" },
+    { "id": "bok", "name": "Books", "sub": "the reading list", "hue": 240, "end": "The shelf read, not just bought — ideas that compound" },
     { "id": "soc", "name": "Voice & Presence", "sub": "communication · content · social", "hue": 300, "end": "A voice and presence people remember — online and in the room" }
   ]
 }

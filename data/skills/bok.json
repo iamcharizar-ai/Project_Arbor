@@ -1,0 +1,37 @@
+{ "_note": "Reading list from Mini Notes/Shopping.md. Books have no prerequisites — read in any order. Tiers are the same everywhere: started → past halfway → finished + one takeaway captured. The 'Finish 12 Books' node tracks the yearly count.",
+"skills": [
+{ "id": "read-habit", "branch": "Habit", "name": "Finish 12 Books", "icon": "📚", "star": true, "unit": "books", "t": [4, 8, 12], "req": [], "note": "The realm's spine — a book a month. Everything below feeds this count." },
+
+{ "id": "slight-edge", "branch": "Wealth & Money", "name": "The Slight Edge", "icon": "📗", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "money-unlocked", "branch": "Wealth & Money", "name": "Money Unlocked", "icon": "📗", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "simple-path-wealth", "branch": "Wealth & Money", "name": "The Simple Path to Wealth", "icon": "📗", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "100m-offers", "branch": "Wealth & Money", "name": "$100M Offers", "icon": "📗", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" }, "note": "Alex Hormozi. Direct Etsy/offer-design input." },
+{ "id": "millionaire-mind", "branch": "Wealth & Money", "name": "Secrets of the Millionaire Mind", "icon": "📗", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "think-grow-rich", "branch": "Wealth & Money", "name": "Think and Grow Rich", "icon": "📗", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "happy-pocket", "branch": "Wealth & Money", "name": "A Happy Pocket Full of Money", "icon": "📗", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "millionaire-next-door", "branch": "Wealth & Money", "name": "The Millionaire Next Door", "icon": "📗", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "designing-your-life", "branch": "Wealth & Money", "name": "Designing Your Life", "icon": "📗", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+
+{ "id": "discipline-freedom", "branch": "Discipline & Mindset", "name": "Discipline Equals Freedom", "icon": "📕", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" }, "note": "Jocko Willink." },
+{ "id": "extreme-ownership", "branch": "Discipline & Mindset", "name": "Extreme Ownership", "icon": "📕", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" }, "note": "Jocko Willink & Leif Babin." },
+{ "id": "discipline-destiny", "branch": "Discipline & Mindset", "name": "Discipline Is Destiny", "icon": "📕", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" }, "note": "Ryan Holiday." },
+{ "id": "war-of-art", "branch": "Discipline & Mindset", "name": "The War of Art", "icon": "📕", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "comfort-cage", "branch": "Discipline & Mindset", "name": "Escape the Comfort Cage", "icon": "📕", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "stop-magoo", "branch": "Discipline & Mindset", "name": "Stop Being a Magoo", "icon": "📕", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "courage-disliked", "branch": "Discipline & Mindset", "name": "The Courage to Be Disliked", "icon": "📕", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+
+{ "id": "rational-male", "branch": "Relationships & Masculinity", "name": "The Rational Male", "icon": "📘", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "superior-man", "branch": "Relationships & Masculinity", "name": "The Way of the Superior Man", "icon": "📘", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "positive-masculinity", "branch": "Relationships & Masculinity", "name": "Rational Male: Positive Masculinity", "icon": "📘", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "crucial-conversations", "branch": "Relationships & Masculinity", "name": "Crucial Conversations", "icon": "📘", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+
+{ "id": "bhagavad-gita", "branch": "Spiritual & Philosophy", "name": "Bhagavad Gita", "icon": "📙", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "four-agreements", "branch": "Spiritual & Philosophy", "name": "The Four Agreements", "icon": "📙", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "the-secret", "branch": "Spiritual & Philosophy", "name": "The Secret", "icon": "📙", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" } },
+{ "id": "becoming-supernatural", "branch": "Spiritual & Philosophy", "name": "Becoming Supernatural", "icon": "📙", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" }, "note": "Joe Dispenza." },
+{ "id": "green-book", "branch": "Spiritual & Philosophy", "name": "Green Book", "icon": "📙", "req": [], "tiers": { "u": "Started it", "p": "Past halfway", "m": "Finished — one takeaway captured" }, "note": "Ambiguous title in the list — confirm which 'Green Book' this is." },
+
+{ "id": "manga-boruto", "branch": "Manga", "name": "Boruto", "icon": "📔", "req": [], "tiers": { "u": "Caught up to the current volume", "p": "—", "m": "Volumes 9, 11–13, 16–20 read (see Boruto Volumes note)" }, "note": "Tracked per-volume in Mini Notes/Boruto Volumes.md — vols 9, 11–13, 16–20 remaining." },
+{ "id": "manga-chainsaw-man", "branch": "Manga", "name": "Chainsaw Man", "icon": "📔", "req": [], "tiers": { "u": "Started it", "p": "Part 1 done", "m": "Caught up to current" } },
+{ "id": "manga-one-piece", "branch": "Manga", "name": "One Piece", "icon": "📔", "req": [], "tiers": { "u": "Started the read", "p": "Through a full saga", "m": "Caught up to current" }, "note": "The long haul." }
+] }

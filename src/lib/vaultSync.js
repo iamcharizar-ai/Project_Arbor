@@ -8,7 +8,7 @@
 import { idbDel, idbGet, idbSet } from './idb.js'
 
 const HANDLE_KEY = 'arbor-vault-dir-handle'
-const REALM_FILES = ['cal', 'mob', 'mov', 'mus', 'aes', 'dex', 'tec', 'wel', 'soc']
+const REALM_FILES = ['cal', 'mob', 'mov', 'mus', 'aes', 'dex', 'tec', 'car', 'fin', 'bok', 'soc']
 
 export function supported() {
   return 'showDirectoryPicker' in window
