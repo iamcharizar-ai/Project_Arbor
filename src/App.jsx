@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import Atlas from './components/Atlas.jsx'
 import Realm from './components/Realm.jsx'
 import Panel from './components/Panel.jsx'
-import Search from './components/Search.jsx'
 import Wheel from './components/Wheel.jsx'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ClickSpark } from './components/fx.jsx'
 import { useTree, initVault, connectVault, authorizeVault, overallStats, weekStats } from './lib/store.js'
 
@@ -101,11 +101,21 @@ export default function App() {
 
       <VaultBanner tree={tree} />
 
-      {view === 'atlas'
-        ? <Atlas onOpen={(id) => setView(id)} onFocus={goTo} />
-        : <Realm key={view} realmId={view} onSelect={setSelected} selectedId={selected?.id} focus={focus} />}
+      <AnimatePresence mode="wait">
+        {view === 'atlas' ? (
+          <motion.div key="atlas" className="view-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}>
+            <Atlas onOpen={(id) => setView(id)} onFocus={goTo} />
+          </motion.div>
+        ) : (
+          <motion.div key="realm" className="view-container" layoutId={`realm-${view}`} initial={{ opacity: 0, borderRadius: 24 }} animate={{ opacity: 1, borderRadius: 0 }} exit={{ opacity: 0 }} transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}>
+            <Realm key={view} realmId={view} onSelect={setSelected} selectedId={selected?.id} focus={focus} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {selected && <Panel skill={selected} onClose={() => setSelected(null)} />}
+      <AnimatePresence>
+        {selected && <Panel skill={selected} onClose={() => setSelected(null)} />}
+      </AnimatePresence>
       <Search open={searchOpen} onClose={() => setSearchOpen(false)} onPick={goTo} />
     </div>
   )

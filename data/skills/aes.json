@@ -1,0 +1,23 @@
+{ "skills": [
+  { "id": "nutrition-tracking", "branch": "Nutrition Pipeline", "name": "Macro Tracking", "icon": "⚖️", "req": [], "tiers": { "u": "Tracked protein & calories for 3 days", "p": "Hit protein goal (1.6g/kg) for 14 days", "m": "Eyeballing portions accurately within 10%" } },
+  { "id": "meal-prep", "branch": "Nutrition Pipeline", "name": "Meal Prep Habit", "icon": "🍱", "req": ["nutrition-tracking"], "tiers": { "u": "Prepped 3 days of lunches", "p": "Weekly Sunday prep routine established", "m": "Can prep 5 days of high-protein meals in < 2 hrs" } },
+  { "id": "cut-15", "branch": "Nutrition Pipeline", "name": "Cut to 15% BF", "icon": "🔪", "req": ["nutrition-tracking"], "tiers": { "u": "Deficit established", "p": "Visible abs in good lighting", "m": "Maintained 15% for 4 weeks" } },
+  { "id": "lean-bulk-1", "branch": "Nutrition Pipeline", "name": "Lean Bulk Phase 1", "icon": "📈", "req": ["cut-15"], "tiers": { "u": "+300 cal surplus", "p": "Gained 2kg without waist increase", "m": "Added 5kg, maintained <18% BF" } },
+  { "id": "cut-12", "branch": "Nutrition Pipeline", "name": "Cut to 12% BF", "icon": "🗡️", "req": ["lean-bulk-1"], "tiers": { "u": "Strict deficit started", "p": "Lower ab veins visible", "m": "Photoshoot ready" } },
+
+  { "id": "lift-bench", "branch": "Physique Landmarks", "name": "Bench Press", "icon": "🏋️", "unit": "kg", "t": [60, 80, 100], "req": [] },
+  { "id": "lift-squat", "branch": "Physique Landmarks", "name": "Barbell Squat", "icon": "🦵", "unit": "kg", "t": [80, 100, 140], "req": [] },
+  { "id": "lift-deadlift", "branch": "Physique Landmarks", "name": "Deadlift", "icon": "🦍", "unit": "kg", "t": [100, 140, 180], "req": [] },
+  { "id": "lift-ohp", "branch": "Physique Landmarks", "name": "Overhead Press", "icon": "🥥", "unit": "kg", "t": [40, 50, 60], "req": [] },
+  { "id": "chest-armor", "branch": "Physique Landmarks", "name": "Armor Chest", "icon": "🛡️", "req": ["lift-bench"], "tiers": { "u": "Upper chest line visible", "p": "Deep center separation", "m": "Shelf-like upper chest (Incline focus)" } },
+  { "id": "coconut-shoulders", "branch": "Physique Landmarks", "name": "3D Delts", "icon": "🥥", "req": ["lift-ohp"], "tiers": { "u": "Side delts pop in shirts", "p": "Rear delts visible from side", "m": "Capped 3D look in all lighting" } },
+  { "id": "v-taper", "branch": "Physique Landmarks", "name": "V-Taper", "icon": "🔻", "req": ["chest-armor", "coconut-shoulders", "cut-12"], "tiers": { "u": "Lats wider than waist", "p": "Shoulder-to-waist ratio > 1.4", "m": "Shoulder-to-waist ratio > 1.6 (Golden Ratio)" } },
+
+  { "id": "skin-routine", "branch": "Grooming & Skin", "name": "Daily Skincare", "icon": "🧴", "req": [], "tiers": { "u": "Cleanser & Moisturizer daily", "p": "Added SPF & Retinol", "m": "Unbroken 90-day streak" } },
+  { "id": "glass-skin", "branch": "Grooming & Skin", "name": "Glass Skin", "icon": "✨", "star": true, "req": ["skin-routine", "cut-15"], "tiers": { "u": "No active breakouts", "p": "Even tone, faded scars", "m": "Reflective, poreless appearance" } },
+  { "id": "hair-style", "branch": "Grooming & Skin", "name": "Signature Hair", "icon": "💇", "req": [], "tiers": { "u": "Found a barber/stylist", "p": "Mastered styling products (clay/pomade)", "m": "Hair looks perfect with 2 mins of effort" } },
+  
+  { "id": "wardrobe-basics", "branch": "Style", "name": "Wardrobe Basics", "icon": "👕", "req": ["cut-15"], "tiers": { "u": "Fitted plain tees (black/white)", "p": "Perfect-fitting jeans & trousers", "m": "Versatile layering (jackets/overshirts)" } },
+  { "id": "footwear", "branch": "Style", "name": "Shoe Game", "icon": "👟", "req": ["wardrobe-basics"], "tiers": { "u": "Clean white sneakers", "p": "Quality boots/loafers", "m": "Shoe always matches the outfit formality" } },
+  { "id": "accessories", "branch": "Style", "name": "Accessories", "icon": "⌚", "req": ["wardrobe-basics"], "tiers": { "u": "Minimalist watch", "p": "Rings / subtle chains", "m": "Signature scent + daily accessories" } }
+] }

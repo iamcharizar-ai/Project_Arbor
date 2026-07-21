@@ -1,0 +1,30 @@
+{ "skills": [
+  { "id": "daily-speaking", "branch": "Voice", "name": "Daily Speaking Reps", "icon": "🎙️", "req": [], "tiers": { "u": "Record 5 min of spoken English daily, 2 weeks", "p": "30 days — listening back without flinching", "m": "Thinking IN English under pressure" } },
+  { "id": "pronunciation-clarity", "branch": "Voice", "name": "Pronunciation & Clarity", "icon": "🔤", "req": ["daily-speaking"], "tiers": { "u": "Record → listen → shadow loop running", "p": "Mumbling patterns identified and fixed", "m": "Every word lands — no one asks 'what?'" } },
+  { "id": "structured-speaking", "branch": "Voice", "name": "Structured Speaking", "icon": "🧱", "req": ["daily-speaking"], "tiers": { "u": "Point-Reason-Example-Point on any topic", "p": "2-minute answers with a clean arc", "m": "Structure is invisible — it just sounds smart" } },
+  { "id": "architecture-story", "branch": "Voice", "name": "Architecture Story", "icon": "🏛️", "req": ["structured-speaking"], "tiers": { "u": "One project explained to a non-technical person", "p": "They can repeat back what it does", "m": "The story works on grandma AND a CTO" } },
+  { "id": "storytelling", "branch": "Voice", "name": "Storytelling", "icon": "📖", "req": ["daily-speaking"], "tiers": { "u": "3 personal stories with beginning/tension/payoff", "p": "Told live, people leaned in", "m": "Can make any anecdote land" } },
+  { "id": "group-discussion", "branch": "Voice", "name": "GD & Debate Comfort", "icon": "🗣️", "req": ["storytelling"], "tiers": { "u": "Spoke early + twice in a mock GD", "p": "Steering discussions, building on others", "m": "The person the room waits to hear" } },
+  { "id": "english-fluency", "branch": "Voice", "name": "English Fluency", "icon": "🔤", "star": true, "req": ["group-discussion"], "tiers": { "u": "10-min unscripted talk, zero grasping", "p": "Humor + precision on demand", "m": "Tharoor-tier: commands a room" } },
+  { "id": "interview-presence", "branch": "Voice", "name": "Interview Presence", "icon": "🪑", "req": ["english-fluency"], "tiers": { "u": "Tells the LifeOS/JARVIS story in 2 min cold", "p": "Mock interviews feel easy", "m": "Walks out of real interviews having enjoyed them" } },
+
+  { "id": "searchable-google", "branch": "Content", "name": "Searchable on Google", "icon": "🔍", "req": [], "tiers": { "u": "LinkedIn + GitHub live and linked", "p": "Portfolio site indexed", "m": "Top result for your name" } },
+  { "id": "youtube-channel-setup", "branch": "Content", "name": "YouTube Setup", "icon": "📺", "req": ["searchable-google"], "tiers": { "u": "Channel Art & Bio", "p": "Niche Defined", "m": "Analytics Configured" } },
+  { "id": "youtube-script-1", "branch": "Content", "name": "Video 1: Script", "icon": "📝", "req": ["youtube-channel-setup"], "tiers": { "u": "Idea Outline", "p": "Draft Script", "m": "Polished & Timed Script" } },
+  { "id": "youtube-shoot-1", "branch": "Content", "name": "Video 1: Shoot", "icon": "🎥", "req": ["youtube-script-1"], "tiers": { "u": "Lighting Setup", "p": "A-Roll Recorded", "m": "B-Roll Gathered" } },
+  { "id": "youtube-edit-1", "branch": "Content", "name": "Video 1: Edit", "icon": "✂️", "req": ["youtube-shoot-1"], "tiers": { "u": "Rough Cut", "p": "VFX & SFX", "m": "Final Polish" } },
+  { "id": "youtube-publish-1", "branch": "Content", "name": "Video 1: Publish", "icon": "🚀", "req": ["youtube-edit-1"], "tiers": { "u": "Thumbnail Designed", "p": "SEO Title & Tags", "m": "Video Published" } },
+  { "id": "youtube-analytics", "branch": "Content", "name": "Video 1: Analyze", "icon": "📈", "req": ["youtube-publish-1"], "tiers": { "u": "Track CTR", "p": "Analyze Retention Graph", "m": "Lessons applied to Video 2" } },
+  
+  { "id": "reel-cadence", "branch": "Content", "name": "Reel Cadence", "icon": "🎞️", "req": ["searchable-google"], "tiers": { "u": "1 reel posted", "p": "1/week for 8 weeks", "m": "Content muscle: idea → posted in a day" } },
+  { "id": "swim-reel", "branch": "Content", "name": "Swim Reel", "icon": "🌊", "req": ["reel-cadence"], "tiers": { "u": "Footage shot", "p": "Edited to music", "m": "Posted" } },
+  { "id": "spiderman-shoot", "branch": "Content", "name": "Spider-Man Rooftop Shoot", "icon": "🕷️", "req": ["reel-cadence"], "tiers": { "u": "Costume & Location", "p": "Handstand Shot", "m": "Backflip Shot & Posted" } },
+
+  { "id": "social-exposure", "branch": "Social", "name": "Social Exposure Reps", "icon": "🚶", "req": [], "tiers": { "u": "Eye contact with 3 strangers daily", "p": "Say Hi to 1 stranger daily", "m": "Initiate a 2-min convo weekly" } },
+  { "id": "conversation-reps", "branch": "Social", "name": "Conversation Flow", "icon": "💬", "req": ["social-exposure"], "tiers": { "u": "Open + ask + follow-up in real convos", "p": "Light teasing lands without effort", "m": "Conversations flow anywhere, with anyone" } },
+  { "id": "fashion-sense", "branch": "Social", "name": "Fashion Sense", "icon": "🧥", "req": [], "tiers": { "u": "A fit formula that works (3 go-to outfits)", "p": "Compliments arriving unprompted", "m": "Signature style — dresses the physique" } },
+  { "id": "profile-basics", "branch": "Social", "name": "Dating Profile", "icon": "🪞", "req": ["fashion-sense"], "tiers": { "u": "3 High Quality Photos", "p": "Engaging Prompts", "m": "Profile earns genuine matches" } },
+  { "id": "date-planning", "branch": "Social", "name": "Date Planning", "icon": "🗓️", "req": ["conversation-reps", "profile-basics"], "tiers": { "u": "Go-to place selected", "p": "Logistics playbook ready", "m": "One date planned and executed smoothly" } },
+  { "id": "dating-arc", "branch": "Social", "name": "Dating Arc", "icon": "💓", "req": ["date-planning"], "tiers": { "u": "Consistent chatting", "p": "Dates happening regularly", "m": "A genuine connection formed" } },
+  { "id": "host-hangout", "branch": "Social", "name": "Be the Organizer", "icon": "🎪", "req": ["conversation-reps"], "tiers": { "u": "Planned one hangout that happened", "p": "The group's default plan-maker", "m": "Hosting comes naturally — people show up for you" } }
+] }

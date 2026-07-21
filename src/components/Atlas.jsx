@@ -2,6 +2,7 @@ import React from 'react'
 import { useTree, realmStats, overallStats, statusOf, frontierSkills, dailyQuest, weekStats, recentEvents, seasonStats, STATUS_DESC } from '../lib/store.js'
 import { ScrambleText, CountUp } from './fx.jsx'
 import Wheel from './Wheel.jsx'
+import { motion } from 'framer-motion'
 
 function Ring({ pct, hue, size = 54 }) {
   const deg = pct * 360
@@ -86,7 +87,15 @@ export default function Atlas({ onOpen, onFocus }) {
           const pct = s.max ? s.pts / s.max : 0
           const next = frontier.filter((k) => k.realm === r.id).length
           return (
-            <button key={r.id} className="realm-card" style={{ '--hue': r.hue, '--i': i }} onClick={() => onOpen(r.id)}>
+            <motion.button 
+              layoutId={`realm-${r.id}`}
+              key={r.id} 
+              className="realm-card" 
+              style={{ '--hue': r.hue, '--i': i }} 
+              onClick={() => onOpen(r.id)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
               <Ring pct={pct} hue={r.hue} />
               <div className="realm-card-body">
                 <h2>{r.name}</h2>
@@ -102,7 +111,7 @@ export default function Atlas({ onOpen, onFocus }) {
               </div>
               <span className="realm-enter">→</span>
               <span className="card-glare" />
-            </button>
+            </motion.button>
           )
         })}
       </div>

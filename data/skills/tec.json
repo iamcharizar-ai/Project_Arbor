@@ -1,0 +1,32 @@
+{ "skills": [
+  { "id": "typing-fast", "branch": "Foundation", "name": "Fast Typing", "icon": "⌨️", "unit": "wpm", "t": [50, 70, 90], "req": [] },
+  { "id": "terminal-cli", "branch": "Foundation", "name": "Terminal & CLI", "icon": "🖥️", "req": ["typing-fast"], "tiers": { "u": "Navigation & Env Vars", "p": "Process & Log Mgmt", "m": "Diagnostics" } },
+  { "id": "git-basics", "branch": "Foundation", "name": "Git Basics", "icon": "🔀", "req": ["terminal-cli"], "tiers": { "u": "Init, Add, Commit", "p": "Branching & Merging", "m": "Resolving Conflicts" } },
+  { "id": "git-advanced", "branch": "Foundation", "name": "Git Mastery", "icon": "🐙", "req": ["git-basics"], "tiers": { "u": "Rebase & Cherry-pick", "p": "History Surgery", "m": "CI/CD Actions Hooks" } },
+  { "id": "python", "branch": "Foundation", "name": "Python", "icon": "🐍", "req": [], "tiers": { "u": "Syntax & Basics", "p": "DSA ready", "m": "Production scripts blind" } },
+  { "id": "leetcode-grind", "branch": "Foundation", "name": "LeetCode", "icon": "🧩", "req": ["python"], "tiers": { "u": "Easy (Arrays/Strings)", "p": "Medium (Trees/Graphs)", "m": "Hard (DP/Interview Ready)" } },
+  { "id": "javascript", "branch": "Foundation", "name": "JavaScript", "icon": "🟨", "req": ["python"], "tiers": { "u": "DOM & Events", "p": "Async/Promises", "m": "ES6+ Mastery" } },
+  { "id": "typescript", "branch": "Foundation", "name": "TypeScript", "icon": "🟦", "req": ["javascript"], "tiers": { "u": "Basic Types & Interfaces", "p": "Generics & Utility Types", "m": "Complex Type Gymnastics" } },
+
+  { "id": "html-css", "branch": "Web Architecture", "name": "HTML & CSS", "icon": "🎨", "req": ["javascript"], "tiers": { "u": "Semantic HTML", "p": "Flexbox & Grid", "m": "Responsive & Animations" } },
+  { "id": "react-basics", "branch": "Web Architecture", "name": "React Basics", "icon": "⚛️", "req": ["html-css"], "tiers": { "u": "Components & Props", "p": "useState & useEffect", "m": "Custom Hooks" } },
+  { "id": "react-advanced", "branch": "Web Architecture", "name": "React Mastery", "icon": "⚛️", "req": ["react-basics"], "tiers": { "u": "Context API", "p": "Performance (Memo/Callback)", "m": "Advanced Patterns (HOCs/Render Props)" } },
+  { "id": "backend-apis", "branch": "Web Architecture", "name": "Backend REST APIs", "icon": "🔌", "req": ["react-basics", "typescript"], "tiers": { "u": "Express Routes", "p": "Middleware & Auth", "m": "Robust Error Handling" } },
+  { "id": "database-sql", "branch": "Web Architecture", "name": "Databases & SQL", "icon": "🗄️", "req": ["backend-apis"], "tiers": { "u": "Schema & Queries", "p": "Joins & Indexes", "m": "Performance & EXPLAIN" } },
+  { "id": "supabase", "branch": "Web Architecture", "name": "Supabase & RLS", "icon": "⚡", "req": ["database-sql"], "tiers": { "u": "Auth Setup", "p": "Row Level Security", "m": "Edge Functions" } },
+  { "id": "deploy-devops", "branch": "Web Architecture", "name": "Deploy & DevOps", "icon": "🚢", "req": ["react-advanced", "supabase"], "tiers": { "u": "Vercel / Netlify", "p": "Docker Basics", "m": "VPS & CI/CD Pipelines" } },
+  { "id": "software-architecture", "branch": "Web Architecture", "name": "System Architecture", "icon": "🏗️", "req": ["deploy-devops"], "tiers": { "u": "Explain Data Flow", "p": "Whiteboard Design", "m": "Defend Trade-offs" } },
+
+  { "id": "llm-basics", "branch": "AI Systems", "name": "LLM API Basics", "icon": "🧠", "req": ["python", "backend-apis"], "tiers": { "u": "Simple Chat Completion", "p": "System Prompts", "m": "Structured Outputs (JSON)" } },
+  { "id": "prompt-engineering", "branch": "AI Systems", "name": "Prompt Engineering", "icon": "📐", "req": ["llm-basics"], "tiers": { "u": "Few-Shot", "p": "Chain of Thought", "m": "Reusable Prompt Library" } },
+  { "id": "tool-calling", "branch": "AI Systems", "name": "Function/Tool Calling", "icon": "🛠️", "req": ["llm-basics"], "tiers": { "u": "Define a Tool", "p": "Execute Tool Choice", "m": "Error Recovery" } },
+  { "id": "rag-pipeline", "branch": "AI Systems", "name": "RAG & Embeddings", "icon": "📚", "req": ["tool-calling"], "tiers": { "u": "Generate Embeddings", "p": "Vector Search", "m": "Evaluated Retrieval Quality" } },
+  { "id": "agentic-loops", "branch": "AI Systems", "name": "Agentic Loops", "icon": "🤖", "req": ["tool-calling"], "tiers": { "u": "ReAct Loop", "p": "Memory Management", "m": "Autonomous Goal Seeking" } },
+  { "id": "multi-agent", "branch": "AI Systems", "name": "Multi-Agent Systems", "icon": "🕸️", "req": ["agentic-loops"], "tiers": { "u": "Agent Handoffs", "p": "Supervisor Pattern", "m": "Orchestrated Swarms" } },
+  
+  { "id": "ship-lifeos", "branch": "Capstones", "name": "Ship LifeOS", "icon": "🎛️", "req": ["react-advanced", "supabase"], "tiers": { "u": "v1.0 Live", "p": "v1.1 Live", "m": "30 Day Daily Use" } },
+  { "id": "ship-arbor", "branch": "Capstones", "name": "Ship ARBOR", "icon": "🌳", "req": ["react-advanced"], "tiers": { "u": "v0.1 renders", "p": "v0.2 synced", "m": "Daily Driver" } },
+  { "id": "ship-jarvis", "branch": "Capstones", "name": "Ship JARVIS", "icon": "🎩", "req": ["agentic-loops"], "tiers": { "u": "Heartbeats live", "p": "Terminal integrated", "m": "Loop Closed" } },
+  { "id": "portfolio-case-study", "branch": "Capstones", "name": "Portfolio Case Study", "icon": "📑", "req": ["ship-lifeos", "software-architecture"], "tiers": { "u": "Drafted Architecture", "p": "Metrics & Tradeoffs", "m": "Interview-ready Case" } },
+  { "id": "ps2-automation", "branch": "Capstones", "name": "PS2 Automation Case", "icon": "🏢", "req": ["portfolio-case-study", "multi-agent"], "tiers": { "u": "Identify Need", "p": "Build & Demo", "m": "A-Grade Evidence" } }
+] }

@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react'
 // no server bridge needed, so this config is a plain static build/dev setup.
 // Works identically on localhost and once deployed (e.g. Vercel).
 export default defineConfig({
+  base: '/Project_Arbor/',
   plugins: [react()],
   server: { port: 5178, strictPort: true },
 })
