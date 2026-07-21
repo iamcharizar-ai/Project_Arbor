@@ -5,6 +5,7 @@ import Panel from './components/Panel.jsx'
 import Wheel from './components/Wheel.jsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ClickSpark } from './components/fx.jsx'
+import Search from './components/Search.jsx'
 import { useTree, initVault, connectVault, authorizeVault, overallStats, weekStats } from './lib/store.js'
 
 function VaultBanner({ tree }) {
