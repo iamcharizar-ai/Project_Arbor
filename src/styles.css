@@ -137,6 +137,14 @@ html, body, #root {
 
 .sync-dot { font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-dim); }
 .sync-dot.live { color: var(--mastered); }
+.vault-disconnect-btn {
+  background: none; border: none; padding: 0; cursor: pointer;
+  color: var(--text-dim); font-family: var(--mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  text-decoration: underline; text-underline-offset: 3px;
+  transition: color 0.15s;
+}
+.vault-disconnect-btn:hover { color: var(--inprogress); }
 
 .vitality { display: flex; align-items: baseline; gap: 8px; }
 .vitality-num { font-size: 16px; color: var(--unlocked); font-weight: 700; font-family: var(--mono); }
@@ -152,6 +160,7 @@ html, body, #root {
   text-transform: uppercase; letter-spacing: 0.06em;
 }
 .vault-banner.warn { border-bottom-color: var(--inprogress); }
+.vault-banner-actions { display: flex; gap: 10px; }
 .vault-banner button {
   background: var(--unlocked); color: #000; border: var(--bw) solid #000;
   font-family: var(--mono); font-size: 12px; font-weight: 700;
@@ -167,6 +176,11 @@ html, body, #root {
   transform: translate(2px, 2px);
   box-shadow: var(--shadow-pressed);
 }
+.vault-banner button.secondary {
+  background: none; color: var(--text-dim); border-color: var(--border);
+  box-shadow: none;
+}
+.vault-banner button.secondary:hover { color: var(--text); border-color: var(--border-strong); }
 
 /* ─── atlas (Home Screen) ─── */
 .atlas { position: relative; z-index: 1; flex: 1; overflow-y: auto; padding: 60px clamp(20px, 6vw, 90px) 80px; }

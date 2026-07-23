@@ -7,9 +7,20 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ClickSpark } from './components/fx.jsx'
 import AdaptationOverlay from './components/AdaptationOverlay.jsx'
 import Search from './components/Search.jsx'
-import { useTree, initVault, connectVault, authorizeVault, overallStats, weekStats } from './lib/store.js'
+import { useTree, initVault, connectVault, authorizeVault, disconnectVault, overallStats, weekStats } from './lib/store.js'
 
 function VaultBanner({ tree }) {
+  // A bad connection (wrong folder, unreadable files) can still leave
+  // syncStatus 'ready' — surface the error with a way OUT regardless of
+  // status, instead of only ever offering "Connect"/"Re-authorize".
+  if (tree.error) {
+    return (
+      <div className="vault-banner warn">
+        <span>⚠ {tree.error}</span>
+        <button onClick={disconnectVault}>Disconnect vault</button>
+      </div>
+    )
+  }
   if (tree.syncStatus === 'ready') return null
   if (tree.syncStatus === 'unsupported') {
     return (
@@ -22,14 +33,17 @@ function VaultBanner({ tree }) {
     return (
       <div className="vault-banner">
         <span>Vault access needs to be re-granted (browser restarted).</span>
-        <button onClick={authorizeVault}>Re-authorize</button>
+        <div className="vault-banner-actions">
+          <button onClick={authorizeVault}>Re-authorize</button>
+          <button className="secondary" onClick={disconnectVault}>Disconnect</button>
+        </div>
       </div>
     )
   }
   return (
     <div className="vault-banner">
       <span>Showing the bundled snapshot. Connect the vault to sync live edits and save ticks.</span>
-      <button onClick={connectVault}>Connect vault folder (System/arbor)</button>
+      <button onClick={connectVault}>Connect vault folder</button>
     </div>
   )
 }
@@ -125,6 +139,11 @@ export default function App() {
           <span className={`sync-dot ${tree.syncStatus === 'ready' ? 'live' : 'off'}`} title="Vault sync status">
             {tree.pending > 0 ? '⇅ syncing' : tree.syncStatus === 'ready' ? '● vault' : '○ offline'}
           </span>
+          {tree.syncStatus === 'ready' && !tree.error && (
+            <button className="vault-disconnect-btn" onClick={disconnectVault} title="Disconnect this vault folder">
+              disconnect
+            </button>
+          )}
           <div className="vitality" title={`${stats.pts} / ${stats.max} growth points · lifetime ${(vitality * 100).toFixed(1)}%`}>
             <span className="vitality-num">⚙ {stats.pts}</span>
             {week.ticks > 0 && <span className="vitality-week">+{week.ticks} this wk</span>}

@@ -114,7 +114,22 @@ export async function authorizeVault() {
 export async function disconnectVault() {
   await vault.disconnect()
   handle = null
-  state = { ...state, syncStatus: 'disconnected' }
+  // Full reset, not just the status flag — otherwise a stale error banner (or
+  // partially-loaded live data) from a bad connection lingers after
+  // disconnecting. Falls back to the same bundled+cached-progress base
+  // initVault starts from, so the app is immediately usable again.
+  const c = loadCache()
+  state = {
+    ...state,
+    syncStatus: 'disconnected',
+    error: null,
+    fileErrors: [],
+    realms: BUNDLED.realms,
+    skills: BUNDLED.skills,
+    progress: { ...BUNDLED.progress, ...(c?.progress || {}) },
+    season: null,
+    logLines: [],
+  }
   emit()
 }
 
