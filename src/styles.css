@@ -71,6 +71,35 @@ html, body, #root {
 .brand-wheel { display: inline-grid; }
 @keyframes wheelSpin { to { transform: rotate(360deg); } }
 
+/* ─── adaptation moment: full-screen, one-shot, DECORATIVE (never blocks
+   input — see AdaptationOverlay.jsx) ─── */
+.adapt-overlay {
+  position: fixed; inset: 0; z-index: 600; pointer-events: none;
+  display: grid; place-items: center;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.82) 70%);
+}
+.adapt-overlay.active { animation: adaptPulse 2400ms ease-in-out forwards; }
+@keyframes adaptPulse {
+  0% { opacity: 0; }
+  6.25% { opacity: 1; }
+  85.4% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.adapt-overlay-content { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.adapt-overlay-name {
+  margin-top: 18px; font-family: var(--font); font-size: 30px; font-weight: 700;
+  color: var(--text); letter-spacing: -0.01em; text-shadow: 3px 3px 0 rgba(0,0,0,0.9);
+}
+.adapt-overlay-status {
+  font-family: var(--mono); font-size: 15px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.3em; margin-top: 6px;
+}
+.adapt-overlay-status.unlocked { color: var(--unlocked); }
+.adapt-overlay-status.inprogress { color: var(--inprogress); }
+.adapt-overlay-status.mastered { color: var(--mastered); }
+.adapt-overlay-desc { font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
 /* ─── top bar ─── */
 .topbar {
   position: relative; z-index: 50; display: flex; align-items: center; gap: 16px;
@@ -713,3 +742,82 @@ html, body, #root {
 .rf-lod-2 .branch-label { display: none; }
 .rf-lod-2 .sk-star, .rf-lod-2 .sk-adapt { display: none; }
 .rf-lod-2 .burst { display: none; }
+
+/* ─── triangular lattice background ───
+   Sits behind the (transparent) React Flow canvas; nodes land exactly on its
+   intersections. Thinned at mid zoom, dropped when zoomed way out. */
+.lattice-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.lattice-line {
+  stroke: rgba(240, 240, 240, 0.07);
+  stroke-width: 1.1;
+  fill: none;
+}
+.lattice-bg.lod-1 { opacity: 0.4; }
+.lattice-bg.lod-2 { display: none; }
+
+/* graph mounts only once the card→canvas morph settles (see Realm.jsx
+   graphReady) — a short one-shot fade so its appearance still reads as
+   smooth rather than a hard pop-in */
+.rf-mount-in { animation: rfMountIn 180ms ease-out; }
+@keyframes rfMountIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ─── edit mode ─── */
+/* wide invisible edge hit target — inert normally, clickable only in edit mode */
+.edge-hit { stroke: transparent; stroke-width: 16; fill: none; pointer-events: none; }
+.rf-edit .edge-hit { pointer-events: stroke; cursor: pointer; }
+.rf-edit .edge-hit:hover + .react-flow__edge-path { stroke: var(--inprogress) !important; }
+
+.edit-toggle:disabled { opacity: 0.35; cursor: not-allowed; }
+.edit-toggle:disabled:hover { transform: none; border-color: var(--border); color: var(--text-dim); box-shadow: var(--shadow-hard-sm); }
+
+/* ghost cells: 60px footprint (matches .sk) so the mark centres on the lattice
+   point exactly like a real node; the dashed ring is drawn smaller inside */
+.ghost-cell {
+  position: relative; width: 60px; height: 60px;
+  display: grid; place-items: center; cursor: pointer;
+}
+.ghost-cell::before {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 40px; height: 40px; transform: translate(-50%, -50%);
+  border: 2px dashed var(--border); border-radius: 50%;
+  transition: all 0.1s;
+}
+.ghost-cell span {
+  position: relative; z-index: 1; color: var(--text-dim);
+  font-family: var(--mono); font-size: 20px; font-weight: 700; line-height: 1;
+}
+.ghost-cell:hover::before { border-color: var(--unlocked); background: rgba(250, 204, 21, 0.08); transform: translate(-50%, -50%) scale(1.1); }
+.ghost-cell:hover span { color: var(--unlocked); }
+
+/* link tool */
+.rf-link .react-flow__node-skill { cursor: crosshair; }
+.sk.link-armed .sk-circle { border-color: var(--inprogress) !important; box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.45), 3px 3px 0 rgba(0, 0, 0, 0.7); }
+
+/* create-skill modal */
+.skill-editor-scrim {
+  position: absolute; inset: 0; z-index: 50;
+  display: grid; place-items: center; background: rgba(0, 0, 0, 0.55);
+}
+.skill-editor {
+  background: var(--bg-card); border: var(--bw) solid var(--border-strong);
+  box-shadow: var(--shadow-hard-lg); padding: 22px; width: 320px;
+  display: flex; flex-direction: column; gap: 14px; font-family: var(--font);
+}
+.skill-editor-title { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.1em; font-size: 16px; color: var(--text); }
+.skill-editor-cell { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-top: -10px; }
+.skill-editor-field { display: flex; flex-direction: column; gap: 5px; font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+.skill-editor-field input {
+  background: var(--bg-soft); border: 2px solid var(--border); color: var(--text);
+  font-family: var(--font); font-size: 14px; padding: 8px 10px;
+  text-transform: none; letter-spacing: normal;
+}
+.skill-editor-field input:focus { outline: none; border-color: var(--border-strong); }
+.skill-editor-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.skill-editor-actions button:disabled { opacity: 0.4; cursor: not-allowed; }

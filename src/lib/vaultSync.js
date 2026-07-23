@@ -113,6 +113,37 @@ export function writeProgress(dirHandle, id, rec, line) {
   return job
 }
 
+// Skill-definition writes (edit mode: create / reposition / re-link). Same
+// read-modify-write safety as writeProgress, but queued PER REALM FILE so a
+// write to one realm's skills never blocks a write to another's. Each job
+// re-reads the file fresh inside the queue, so an agent's concurrent hand-edit
+// to a different skill in the same file is preserved. `patch` must not carry a
+// `realm` field — realm is derived from the filename on read.
+const skillWriteQueues = {} // realmId -> Promise chain
+
+export function writeSkill(dirHandle, realmId, skillId, patch) {
+  const prev = skillWriteQueues[realmId] || Promise.resolve()
+  const job = prev.catch(() => {}).then(async () => {
+    const skillsDir = await dirHandle.getDirectoryHandle('skills')
+    const name = realmId + '.json'
+    let file
+    try {
+      file = await readJSON(skillsDir, name)
+    } catch {
+      file = { skills: [] }
+    }
+    const skills = file.skills || []
+    const idx = skills.findIndex((s) => s.id === skillId)
+    const next =
+      idx === -1
+        ? [...skills, { id: skillId, ...patch }]
+        : skills.map((s, i) => (i === idx ? { ...s, ...patch } : s))
+    await writeJSON(skillsDir, name, { ...file, skills: next })
+  })
+  skillWriteQueues[realmId] = job
+  return job
+}
+
 export async function loadSavedHandle() {
   const h = await idbGet(HANDLE_KEY)
   if (!h) return { handle: null, status: 'disconnected' }

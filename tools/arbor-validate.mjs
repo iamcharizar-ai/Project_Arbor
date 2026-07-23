@@ -27,6 +27,7 @@ for (const r of REALMS) {
 for (const r of Object.keys(byRealm)) {
   const skills = byRealm[r]
   const ids = new Set()
+  const pinnedCells = new Map() // "q,r" -> id, for pinned-position collisions
   console.log(`${r}.json — ${skills.length} skills`)
   for (const s of skills) {
     if (!s.id) { fail(`${r}: skill missing id (${s.name})`); continue }
@@ -36,6 +37,15 @@ for (const r of Object.keys(byRealm)) {
     const hasUnit = s.unit && Array.isArray(s.t) && s.t.length === 3
     if (!hasTiers && !hasUnit) fail(`${r}:${s.id} has neither tiers{u,p,m} nor unit+t[3]`)
     if (!s.branch) fail(`${r}:${s.id} missing branch`)
+    if (s.pos !== undefined) {
+      if (!s.pos || !Number.isInteger(s.pos.q) || !Number.isInteger(s.pos.r)) {
+        fail(`${r}:${s.id} pos must be { q: <int>, r: <int> }`)
+      } else {
+        const key = s.pos.q + ',' + s.pos.r
+        if (pinnedCells.has(key)) fail(`${r}:${s.id} pinned pos (${key}) collides with ${pinnedCells.get(key)}`)
+        else pinnedCells.set(key, s.id)
+      }
+    }
   }
   for (const s of skills) {
     for (const req of s.req || []) {
@@ -49,6 +59,25 @@ for (const r of Object.keys(byRealm)) {
       if (!byRealm[xr].some((k) => k.id === xid)) fail(`${r}:${s.id} xref "${x}" target not found`)
     }
   }
+
+  // req cycles (incl. self-req): the app can't root a cycle, so those skills
+  // would be unplaceable — flag them loudly rather than let a node vanish.
+  const reqMap = Object.fromEntries(skills.map((s) => [s.id, (s.req || []).filter((x) => ids.has(x))]))
+  const color = {} // undefined=unseen, 1=on stack, 2=done
+  const reported = new Set()
+  const dfs = (id, stack) => {
+    color[id] = 1
+    for (const req of reqMap[id] || []) {
+      if (color[req] === 1) {
+        const cyc = stack.slice(stack.indexOf(req)).concat(req).join(' → ')
+        if (!reported.has(cyc)) { reported.add(cyc); fail(`${r}: req cycle — ${cyc}`) }
+      } else if (color[req] !== 2) {
+        dfs(req, stack.concat(req))
+      }
+    }
+    color[id] = 2
+  }
+  for (const s of skills) if (color[s.id] === undefined) dfs(s.id, [s.id])
 }
 
 const total = Object.values(byRealm).reduce((a, b) => a + b.length, 0)

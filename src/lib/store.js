@@ -28,6 +28,7 @@ let state = {
   season: null, // optional System/arbor/season.json: { name, ends, ids: [] }
   logLines: [], // parsed tail of progress-log.md (the momentum layer)
   pending: 0,
+  pulse: { n: 0, status: null }, // one-shot signal: bumped on a rank-up so the wheel spins + flashes the new tier's colour
 }
 let handle = null
 const listeners = new Set()
@@ -339,10 +340,71 @@ export function setValue(skill, value) {
   if (RANK[after] > RANK[before]) {
     bursts = { ...bursts, [skill.id]: Date.now() }
     setTimeout(() => { bursts = { ...bursts }; delete bursts[skill.id]; emit() }, 1400)
+    // signal the wheel to spin + flash the new tier's colour (one-shot),
+    // and carry skill identity so the full-screen adaptation moment can
+    // name the skill without a separate lookup
+    state = { ...state, pulse: { n: (state.pulse?.n || 0) + 1, status: after, skillId: skill.id, skillName: skill.name } }
   }
   clearTimeout(flushTimers[skill.id])
   flushTimers[skill.id] = setTimeout(() => flush(skill), 900)
   emit()
+}
+
+// ── edit mode: skill-definition writes (create / move / re-link) ──────────
+// Optimistic-local first (immediate re-layout), then the vault write in the
+// background — kept locally on failure, surfaced through state.error, exactly
+// like a progress tick. pushSkillWrite reuses state.pending so the 45s auto-
+// refresh poll won't clobber an in-flight definition write.
+function slugify(name) {
+  return String(name).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'skill'
+}
+
+function uniqueId(base) {
+  const taken = new Set(state.skills.map((s) => s.id))
+  if (!taken.has(base)) return base
+  let i = 2
+  while (taken.has(`${base}-${i}`)) i++
+  return `${base}-${i}`
+}
+
+async function pushSkillWrite(realmId, skillId, patch) {
+  if (!handle || state.syncStatus !== 'ready') return
+  state = { ...state, pending: state.pending + 1 }
+  emit()
+  try {
+    await vault.writeSkill(handle, realmId, skillId, patch)
+    state = { ...state, pending: Math.max(0, state.pending - 1) }
+  } catch (e) {
+    state = { ...state, pending: Math.max(0, state.pending - 1), error: 'sync failed — change kept locally (' + (e?.message || e) + ')' }
+  }
+  emit()
+}
+
+export function createSkill(realmId, { name, branch, icon, req = [], pos }) {
+  const id = uniqueId(slugify(name))
+  const def = { id, branch, name, icon: icon || '◆', req } // vault shape: no realm field
+  if (pos) def.pos = pos
+  state = { ...state, skills: [...state.skills, { ...def, realm: realmId }] }
+  emit()
+  pushSkillWrite(realmId, id, def)
+  return id
+}
+
+export function patchSkill(realmId, skillId, patch) {
+  state = {
+    ...state,
+    skills: state.skills.map((s) => (s.id === skillId && s.realm === realmId ? { ...s, ...patch } : s)),
+  }
+  emit()
+  pushSkillWrite(realmId, skillId, patch)
+}
+
+export function moveSkill(realmId, skillId, pos) {
+  patchSkill(realmId, skillId, { pos })
+}
+
+export function updateSkillReq(realmId, skillId, req) {
+  patchSkill(realmId, skillId, { req })
 }
 
 // ── aggregate stats (weighted, R4) ─────────────────────────────────────────

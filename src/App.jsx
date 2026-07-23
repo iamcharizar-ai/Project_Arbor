@@ -5,6 +5,7 @@ import Panel from './components/Panel.jsx'
 import Wheel from './components/Wheel.jsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ClickSpark } from './components/fx.jsx'
+import AdaptationOverlay from './components/AdaptationOverlay.jsx'
 import Search from './components/Search.jsx'
 import { useTree, initVault, connectVault, authorizeVault, overallStats, weekStats } from './lib/store.js'
 
@@ -40,6 +41,22 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [focus, setFocus] = useState(null) // { id, t } — jump target on the realm canvas
 
+  const [transitionKey, setTransitionKey] = useState(0)
+
+  // Gate for Realm's graph mount: true once the Atlas-card→canvas layoutId
+  // morph has actually settled, so ~126+ React Flow nodes never lay out mid-
+  // resize (that race was the perceived frame-drop on opening a big realm).
+  // onLayoutAnimationComplete fires on the shared-element/FLIP spring itself
+  // (distinct from onAnimationComplete, which only tracks the opacity tween);
+  // the timeout is a safety net in case that callback never fires.
+  const [morphDone, setMorphDone] = useState(false)
+  useEffect(() => {
+    setMorphDone(false)
+    if (view === 'atlas') return
+    const t = setTimeout(() => setMorphDone(true), 600)
+    return () => clearTimeout(t)
+  }, [view])
+
   useEffect(() => { initVault() }, [])
   useEffect(() => {
     const onKey = (e) => {
@@ -48,6 +65,20 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Framer Motion's AnimatePresence exit-completion relies on requestAnimationFrame,
+  // which pauses while the tab is hidden — if a view transition is mid-flight when
+  // that happens, the outgoing view can strand at opacity:0 forever, even after
+  // refocus. Detect exactly that symptom on refocus and force a clean remount.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') return
+      const stuck = document.querySelector('.view-container')
+      if (stuck && getComputedStyle(stuck).opacity === '0') setTransitionKey((k) => k + 1)
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [])
 
   // search result / quest card → open the realm, select + center the node
@@ -75,9 +106,10 @@ export default function App() {
   return (
     <div className="app" style={{ '--realm-hue': realm ? realm.hue : 252 }}>
       <ClickSpark />
+      <AdaptationOverlay />
       <header className="topbar">
         <button className="brand" onClick={() => { setView('atlas'); setSelected(null) }}>
-          <Wheel turns={stats.pts / 10} size={18} className="brand-wheel" />
+          <Wheel turns={stats.pts / 10} size={18} className="brand-wheel" pulse={tree.pulse} />
           ARBOR
         </button>
         {realm && (
@@ -102,14 +134,14 @@ export default function App() {
 
       <VaultBanner tree={tree} />
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" key={transitionKey}>
         {view === 'atlas' ? (
           <motion.div key="atlas" className="view-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}>
             <Atlas onOpen={(id) => setView(id)} onFocus={goTo} />
           </motion.div>
         ) : (
-          <motion.div key="realm" className="view-container" layoutId={`realm-${view}`} initial={{ opacity: 0, borderRadius: 24 }} animate={{ opacity: 1, borderRadius: 0 }} exit={{ opacity: 0 }} transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}>
-            <Realm key={view} realmId={view} onSelect={setSelected} selectedId={selected?.id} focus={focus} />
+          <motion.div key="realm" className="view-container" layoutId={`realm-${view}`} initial={{ opacity: 0, borderRadius: 24 }} animate={{ opacity: 1, borderRadius: 0 }} exit={{ opacity: 0 }} transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} onLayoutAnimationComplete={() => setMorphDone(true)}>
+            <Realm key={view} realmId={view} onSelect={setSelected} selectedId={selected?.id} focus={focus} graphReady={morphDone} />
           </motion.div>
         )}
       </AnimatePresence>
