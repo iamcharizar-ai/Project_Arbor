@@ -1,22 +1,46 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useTree, STATUS_LABEL, STATUS_DESC } from '../lib/store.js'
-import Wheel from './Wheel.jsx'
+import { useTree, STATUS_LABEL } from '../lib/store.js'
 
-// The "the wheel has turned" moment, made big: when a skill crosses a tier,
-// the screen dims, a large wheel spins center-screen (reusing Wheel.jsx's own
-// spin+glow animation — same `pulse` object, so the big wheel and the tiny
-// topbar one move in perfect sync for free), and the skill + new tier print
-// beneath it. One-shot, ~2.4s, self-dismissing.
+// The "the wheel has turned" moment, full-screen: when a skill crosses a tier,
+// the screen dims and the wheel does ONE weighted spin — a heavy two-turn
+// rotation that decelerates and snaps to rest, with a single scale+glow pulse
+// at the peak in that tier's colour. One spin, not a ratchet.
+// One-shot, self-dismissing, decorative (pointer-events:none).
 //
 // Keyed by pulse.n so every crossing mounts a FRESH element — the CSS keyframe
 // then plays from the start on its own, no requestAnimationFrame restart dance
 // (which would stall on a throttled/backgrounded tab). A new pulse mid-flight
 // just remounts for the new skill; the timer restarts with it.
-//
-// Deliberately DECORATIVE: pointer-events:none throughout, so a bulk value-
-// entry session (many tiers crossed back-to-back) is never blocked waiting on
-// this to fade.
-const DURATION_MS = 2400
+const STATUS_GLOW = { unlocked: '#facc15', inprogress: '#f472b6', mastered: '#a3e635' }
+const SPIN_DEG = 720 // one spin = two full turns ("360 or double of that")
+const SPIN_MS = 1300 // the spin itself; heavy start, hard deceleration to rest
+const DURATION_MS = SPIN_MS + 1100 // spin + a beat to read the status + fade
+
+function spinKeyframes(glow) {
+  // single decelerating turn: fast off the line, easing hard into the landing,
+  // with one scale+glow swell that peaks partway through and settles by the end.
+  return [
+    { offset: 0, transform: 'rotate(0deg) scale(0.9)', filter: 'drop-shadow(0 0 0 rgba(0,0,0,0))' },
+    { offset: 0.55, transform: `rotate(${SPIN_DEG * 0.72}deg) scale(1.18)`, filter: `drop-shadow(0 0 22px ${glow}) drop-shadow(0 0 6px ${glow})` },
+    { offset: 1, transform: `rotate(${SPIN_DEG}deg) scale(1)`, filter: 'drop-shadow(0 0 0 rgba(0,0,0,0))' },
+  ]
+}
+
+function AdaptWheel({ status }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || !el.animate) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const glow = STATUS_GLOW[status] || STATUS_GLOW.unlocked
+    el.animate(spinKeyframes(glow), { duration: SPIN_MS, easing: 'cubic-bezier(0.12, 0.8, 0.2, 1)', fill: 'forwards' })
+  }, [status])
+  return (
+    <div ref={ref} className="adapt-wheel-spin">
+      <img src="/wheel.png" alt="" className="wheel-svg" draggable="false" />
+    </div>
+  )
+}
 
 export default function AdaptationOverlay() {
   const tree = useTree()
@@ -41,10 +65,8 @@ export default function AdaptationOverlay() {
   return (
     <div key={shown.n} className={`adapt-overlay active ${shown.status}`} aria-hidden="true">
       <div className="adapt-overlay-content">
-        <Wheel size={220} turns={0} pulse={shown} />
-        <div className="adapt-overlay-name">{shown.skillName}</div>
+        <AdaptWheel status={shown.status} />
         <div className={`adapt-overlay-status ${shown.status}`}>{STATUS_LABEL[shown.status]}</div>
-        <div className="adapt-overlay-desc">{STATUS_DESC[shown.status]}</div>
       </div>
     </div>
   )

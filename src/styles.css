@@ -79,26 +79,26 @@ html, body, #root {
   opacity: 0;
   background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.82) 70%);
 }
+/* duration must match DURATION_MS in AdaptationOverlay.jsx (one spin + a beat
+   to read the status label + fade) */
 .adapt-overlay.active { animation: adaptPulse 2400ms ease-in-out forwards; }
 @keyframes adaptPulse {
   0% { opacity: 0; }
-  6.25% { opacity: 1; }
-  85.4% { opacity: 1; }
+  6% { opacity: 1; }
+  88% { opacity: 1; }
   100% { opacity: 0; }
 }
-.adapt-overlay-content { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.adapt-overlay-name {
-  margin-top: 18px; font-family: var(--font); font-size: 30px; font-weight: 700;
-  color: var(--text); letter-spacing: -0.01em; text-shadow: 3px 3px 0 rgba(0,0,0,0.9);
-}
+.adapt-overlay-content { display: flex; flex-direction: column; align-items: center; gap: clamp(20px, 4vh, 48px); }
+.adapt-wheel-spin { width: min(52vw, 52vh); height: min(52vw, 52vh); }
 .adapt-overlay-status {
-  font-family: var(--mono); font-size: 15px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.3em; margin-top: 6px;
+  font-family: var(--mono); font-weight: 700; text-align: center;
+  font-size: clamp(28px, 6vw, 72px);
+  text-transform: uppercase; letter-spacing: 0.3em;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.9);
 }
 .adapt-overlay-status.unlocked { color: var(--unlocked); }
 .adapt-overlay-status.inprogress { color: var(--inprogress); }
 .adapt-overlay-status.mastered { color: var(--mastered); }
-.adapt-overlay-desc { font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-top: 4px; }
 
 /* ─── top bar ─── */
 .topbar {

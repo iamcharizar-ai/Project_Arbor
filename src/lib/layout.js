@@ -236,27 +236,65 @@ export function layoutRealm(allSkills, realmId) {
     placedBlocks.push({ block, oq, or })
   }
 
-  // ── branch titles: first clear 5×3 pocket next to the block wins ──────────
-  const labelClear = (lq, lr) => {
-    for (let dq = -1; dq <= 3; dq++)
-      for (let dr = -1; dr <= 1; dr++)
-        if (global.has(K(lq + dq, lr + dr))) return false
-    return true
+  // ── branch titles: placed in PIXEL space, centred on the cluster's real
+  //    on-screen footprint. A branch lays out as a serpentine chain and its
+  //    title renders wide (uppercase + 0.35em tracking → ~200-250px), far
+  //    wider than the lattice cells; reasoning in cells alone let a long title
+  //    drift off its cluster. So: measure the cluster's screen box, hang the
+  //    title just above it (then below / right / left) centred on that box,
+  //    and reserve the lattice cells the title's rectangle actually covers so
+  //    nothing else packs under it. Positions are stored as final screen px. ──
+  const ROW_PX = GY * SQRT3_2                 // screen height of one lattice row
+  const LABEL_H = 22                          // rendered label height (px)
+  const CHAR_PX = 12.6                         // ~13px mono + 0.35em tracking, uppercase
+  const GAP = 26                              // clearance between title and cluster
+  // lattice cells a screen-space rectangle covers (y is screen-down; unflip for
+  // pixelToAxial, which expects the tree's +y-up pixel space).
+  const rectCells = (sx, sy, w, h) => {
+    const out = []
+    for (let x = sx; x <= sx + w + 1e-6; x += GX / 2)
+      for (let y = sy; y <= sy + h + 1e-6; y += ROW_PX / 2) {
+        const { q, r } = pixelToAxial(x, -y)
+        out.push(K(q, r))
+      }
+    return out
   }
+  const rectClear = (sx, sy, w, h) => rectCells(sx, sy, w, h).every((k) => !global.has(k))
+
   const placedLabels = []
   for (const { block, oq, or } of placedBlocks) {
-    const midR = or + Math.round(block.h / 2)
-    const spots = [
-      [oq + block.w + 1, midR],
-      [oq - 4, midR],
-      [oq + block.w + 1, or],
-      [oq - 4, or],
-      [oq + Math.round(block.w / 2) - 1, or + block.h + 1],
-      [oq + Math.round(block.w / 2) - 1, or - 2],
+    // cluster footprint in screen space (x right, y DOWN — nodes render at -py)
+    let sxMin = Infinity, sxMax = -Infinity, syMin = Infinity, syMax = -Infinity
+    for (const [cq, cr] of block.cells) {
+      const p = axialToPixel(cq + oq, cr + or)
+      const sx = p.x, sy = -p.y
+      sxMin = Math.min(sxMin, sx); sxMax = Math.max(sxMax, sx)
+      syMin = Math.min(syMin, sy); syMax = Math.max(syMax, sy)
+    }
+    const cx = (sxMin + sxMax) / 2, cy = (syMin + syMax) / 2
+    const w = block.branch.length * CHAR_PX
+    const half = w / 2
+
+    // candidates (top-left of the label box), best first: above the cluster,
+    // then below, then right, then left — all centred on the cluster.
+    const base = [
+      [cx - half, syMin - GAP - LABEL_H],   // above
+      [cx - half, syMax + GAP],             // below
+      [sxMax + GAP, cy - LABEL_H / 2],      // right
+      [sxMin - GAP - w, cy - LABEL_H / 2],  // left
     ]
-    const put = spots.find(([lq, lr]) => labelClear(lq, lr)) || spots[4]
-    for (let dq = -1; dq <= 3; dq++) global.add(K(put[0] + dq, put[1]))
-    placedLabels.push({ branch: block.branch, q: put[0], r: put[1] })
+    let put = base.find(([sx, sy]) => rectClear(sx, sy, w, LABEL_H))
+    if (!put) {
+      // nudge the "above" placement further up in row steps until it's clear —
+      // always terminates into open field above the cluster.
+      for (let k = 2; k < 40 && !put; k++) {
+        const sy = syMin - GAP - LABEL_H - k * ROW_PX
+        if (rectClear(cx - half, sy, w, LABEL_H)) put = [cx - half, sy]
+      }
+    }
+    if (!put) put = [cx - half, syMin - GAP - LABEL_H] // last resort: draw it anyway
+    for (const k of rectCells(put[0], put[1], w, LABEL_H)) global.add(k)
+    placedLabels.push({ branch: block.branch, x: put[0], y: put[1] })
   }
 
   // ── emit React Flow nodes/edges (axial → px, y flipped so it grows up) ────
@@ -275,11 +313,10 @@ export function layoutRealm(allSkills, realmId) {
     }
   })
   for (const l of placedLabels) {
-    const p = axialToPixel(l.q, l.r)
     nodes.push({
       id: `label-${l.branch}`,
       type: 'branchLabel',
-      position: { x: p.x, y: -p.y },
+      position: { x: l.x, y: l.y },
       data: { label: l.branch },
       selectable: false,
       draggable: false,
