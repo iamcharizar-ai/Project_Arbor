@@ -46,7 +46,11 @@ export function pixelToAxial(x, y) {
 const E = [1, 0], NE = [0, 1], NW = [-1, 1], W = [-1, 0], SW = [0, -1], SE = [1, -1]
 const HEXN = [E, NE, NW, W, SW, SE] // the 6 neighbours, for packing buffer
 
-export function layoutRealm(allSkills, realmId) {
+// labelOverrides: { [branch]: { x, y, hidden } } — a title the user has dragged,
+// hidden, or both. A pinned title skips the auto search entirely; a hidden one
+// still gets an auto position (so it can be shown again in the label tool) but
+// reserves no lattice cells, freeing that space for nodes.
+export function layoutRealm(allSkills, realmId, labelOverrides = {}) {
   const skills = allSkills.filter((s) => s.realm === realmId)
   const byId = Object.fromEntries(skills.map((s) => [s.id, s]))
   const branches = [...new Set(skills.map((s) => s.branch))]
@@ -263,6 +267,15 @@ export function layoutRealm(allSkills, realmId) {
 
   const placedLabels = []
   for (const { block, oq, or } of placedBlocks) {
+    const ov = labelOverrides[block.branch] || {}
+    const hidden = !!ov.hidden
+    if (Number.isFinite(ov.x) && Number.isFinite(ov.y)) {
+      const pinnedW = block.branch.length * CHAR_PX
+      if (!hidden) for (const k of rectCells(ov.x, ov.y, pinnedW, LABEL_H)) global.add(k)
+      placedLabels.push({ branch: block.branch, x: ov.x, y: ov.y, hidden, pinned: true })
+      continue
+    }
+
     // cluster footprint in screen space (x right, y DOWN — nodes render at -py)
     let sxMin = Infinity, sxMax = -Infinity, syMin = Infinity, syMax = -Infinity
     for (const [cq, cr] of block.cells) {
@@ -293,8 +306,8 @@ export function layoutRealm(allSkills, realmId) {
       }
     }
     if (!put) put = [cx - half, syMin - GAP - LABEL_H] // last resort: draw it anyway
-    for (const k of rectCells(put[0], put[1], w, LABEL_H)) global.add(k)
-    placedLabels.push({ branch: block.branch, x: put[0], y: put[1] })
+    if (!hidden) for (const k of rectCells(put[0], put[1], w, LABEL_H)) global.add(k)
+    placedLabels.push({ branch: block.branch, x: put[0], y: put[1], hidden, pinned: false })
   }
 
   // ── emit React Flow nodes/edges (axial → px, y flipped so it grows up) ────
@@ -317,7 +330,7 @@ export function layoutRealm(allSkills, realmId) {
       id: `label-${l.branch}`,
       type: 'branchLabel',
       position: { x: l.x, y: l.y },
-      data: { label: l.branch },
+      data: { label: l.branch, hidden: l.hidden, pinned: l.pinned },
       selectable: false,
       draggable: false,
     })

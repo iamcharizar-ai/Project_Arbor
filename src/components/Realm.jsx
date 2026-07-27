@@ -2,10 +2,15 @@ import React, { useMemo, useCallback, useEffect, useState } from 'react'
 import { ReactFlow, Handle, Position, useReactFlow, useNodesInitialized, ReactFlowProvider, useStore } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { layoutRealm, axialToPixel, pixelToAxial } from '../lib/layout.js'
-import { useTree, statusOf, burstOf, rec, frontierSkills, moveSkill, updateSkillReq } from '../lib/store.js'
+import {
+  useTree, statusOf, burstOf, rec, frontierSkills,
+  moveSkills, updateSkillReq, deleteSkills, labelsOf, setBranchLabel,
+} from '../lib/store.js'
 import { ScrambleText } from './fx.jsx'
 import LatticeBackground from './LatticeBackground.jsx'
 import SkillEditor from './SkillEditor.jsx'
+import BranchLabelEditor from './BranchLabelEditor.jsx'
+import Modal from './Modal.jsx'
 
 // WINGS-style node: bare icon circle + status ring — no text on the canvas,
 // the side panel carries name/detail. Memoized hard — with ~290 nodes on
@@ -43,8 +48,18 @@ const SkillNode = React.memo(
     a.data.linkArmed === b.data.linkArmed,
 )
 
+// Branch title. Inert text normally; in edit mode's `label` tool it becomes a
+// draggable, clickable object — and titles the user has hidden reappear here
+// as ghosts so hiding one isn't a one-way door.
 function BranchLabel({ data }) {
-  return <div className="branch-label">{data.label}</div>
+  return (
+    <div
+      className={`branch-label ${data.editable ? 'label-editable' : ''} ${data.hidden ? 'label-hidden' : ''}`}
+      title={data.editable ? 'drag to move · click to rename or hide' : undefined}
+    >
+      {data.label}
+    </div>
+  )
 }
 
 // Empty lattice cell shown only in edit mode. Clicking one opens the editor to
@@ -116,22 +131,28 @@ function lodOf(zoom) {
   return zoom < 0.32 ? 2 : zoom < 0.55 ? 1 : 0
 }
 
-function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, editTool, graphReady }) {
+function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, editTool, graphReady, selIds, setSelIds }) {
   const tree = useTree()
   const { fitView, setCenter } = useReactFlow()
   const nodesInitialized = useNodesInitialized()
   const lod = useStore((s) => lodOf(s.transform[2]))
+  // memoised: labelsOf falls back to a fresh {}, which would otherwise re-run
+  // the (expensive) layout on every single render
+  const labels = useMemo(() => labelsOf(realmId, tree), [tree.labels, realmId])
   const { nodes: baseNodes, edges: baseEdges, occupied, bounds } = useMemo(
-    () => layoutRealm(tree.skills, realmId),
-    [tree.skills, realmId],
+    () => layoutRealm(tree.skills, realmId, labels),
+    [tree.skills, realmId, labels],
   )
 
   // edit-mode transient state — never touches the global store
   const [linkFrom, setLinkFrom] = useState(null) // skill id armed as prereq
   const [pendingAt, setPendingAt] = useState(null) // { q, r } the create form targets
-  const [dragPos, setDragPos] = useState(null) // { id, x, y } live drag override
-  useEffect(() => { if (!editMode) { setLinkFrom(null); setPendingAt(null); setDragPos(null) } }, [editMode])
-  useEffect(() => { setLinkFrom(null) }, [editTool])
+  const [dragPos, setDragPos] = useState(null) // { [id]: { x, y } } live drag override
+  const [labelEdit, setLabelEdit] = useState(null) // branch whose title is being edited
+  useEffect(() => {
+    if (!editMode) { setLinkFrom(null); setPendingAt(null); setDragPos(null); setLabelEdit(null) }
+  }, [editMode])
+  useEffect(() => { setLinkFrom(null); setLabelEdit(null) }, [editTool])
 
   useEffect(() => {
     if (!nodesInitialized) return
@@ -161,16 +182,19 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, edi
     [baseNodes],
   )
 
-  // lattice cell (q,r) -> node id, for drop-collision checks (positions come
-  // straight from axialToPixel so the inverse round-trips exactly)
-  const cellId = useMemo(() => {
-    const m = new Map()
+  // lattice cell (q,r) <-> node id, for drop-collision checks and for reading a
+  // node's pre-drag cell back (positions come straight from axialToPixel so the
+  // inverse round-trips exactly)
+  const { cellId, cellOf } = useMemo(() => {
+    const cellId = new Map()
+    const cellOf = new Map()
     for (const n of baseNodes) {
       if (n.type !== 'skill') continue
       const { q, r } = pixelToAxial(n.position.x, -n.position.y)
-      m.set(q + ',' + r, n.id)
+      cellId.set(q + ',' + r, n.id)
+      cellOf.set(n.id, { q, r })
     }
-    return m
+    return { cellId, cellOf }
   }, [baseNodes])
 
   // empty-cell ghosts, only while placing — every free (q,r) in a padded bounds
@@ -181,19 +205,36 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, edi
       for (let q = bounds.minQ - 2; q <= bounds.maxQ + 2; q++) {
         if (occupied.has(q + ',' + r)) continue
         const p = axialToPixel(q, r)
+        // selectable:false keeps ghosts out of box-selections; onNodeClick
+        // still fires on them, which is all the place tool needs.
         out.push({
           id: `ghost-${q}-${r}`, type: 'ghost',
           position: { x: p.x, y: -p.y }, data: { q, r },
-          draggable: false, selectable: true,
+          draggable: false, selectable: false,
         })
       }
     }
     return out
   }, [editMode, editTool, occupied, bounds])
 
+  const labelTool = editMode && editTool === 'label'
+
   const nodes = useMemo(() => {
-    const skillNodes = baseNodes.map((n) => {
-      if (n.type !== 'skill') return n
+    const out = []
+    for (const n of baseNodes) {
+      if (n.type === 'branchLabel') {
+        // hidden titles only exist while the label tool is open, so they can
+        // be brought back — everywhere else they're simply gone
+        if (n.data.hidden && !labelTool) continue
+        out.push({
+          ...n,
+          draggable: labelTool,
+          position: dragPos?.[n.id] || n.position,
+          data: { ...n.data, editable: labelTool },
+        })
+        continue
+      }
+      if (n.type !== 'skill') { out.push(n); continue }
       const skill = n.data.skill
       const status = statusOf(skill, tree.progress)
       const dim =
@@ -204,10 +245,15 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, edi
             : filter === 'adapted'
               ? status !== 'mastered'
               : !frontierSet.has(skill.id)
-      const node = {
+      out.push({
         ...n,
-        selected: n.id === selectedId,
+        // In edit mode selIds IS the selection — onNodeClick updates it in the
+        // same batch as the click, so this array never lags behind what React
+        // Flow just did. (A node dragged straight from unselected counts too,
+        // or it would blink off the moment the first drag frame lands here.)
+        selected: editMode ? selIds.has(n.id) || !!dragPos?.[n.id] : n.id === selectedId,
         draggable: editMode && editTool === 'place',
+        position: dragPos?.[n.id] || n.position,
         data: {
           ...n.data,
           status,
@@ -216,12 +262,10 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, edi
           dim,
           linkArmed: linkFrom === n.id,
         },
-      }
-      if (dragPos && dragPos.id === n.id) node.position = { x: dragPos.x, y: dragPos.y }
-      return node
-    })
-    return editMode ? [...skillNodes, ...ghosts] : skillNodes
-  }, [baseNodes, selectedId, tree.progress, filter, frontierSet, editMode, editTool, linkFrom, dragPos, ghosts])
+      })
+    }
+    return editMode ? [...out, ...ghosts] : out
+  }, [baseNodes, selectedId, selIds, tree.progress, filter, frontierSet, editMode, editTool, labelTool, linkFrom, dragPos, ghosts])
 
   const edges = useMemo(() => baseEdges.map((e) => {
     const st = statusOf(byId[e.source], tree.progress)
@@ -250,9 +294,13 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, edi
     return false
   }, [byId])
 
-  const onNodeClick = useCallback((_, node) => {
+  const onNodeClick = useCallback((e, node) => {
     if (node.type === 'ghost') {
       if (editMode && editTool === 'place') setPendingAt({ q: node.data.q, r: node.data.r })
+      return
+    }
+    if (node.type === 'branchLabel') {
+      if (labelTool) setLabelEdit(node.data.label)
       return
     }
     if (node.type !== 'skill') return
@@ -267,23 +315,79 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, edi
       setLinkFrom(null)
       return
     }
+    // Drive the selection ourselves rather than mirroring React Flow's after
+    // the fact: onSelectionChange lands a render late, so a plain click (which
+    // REPLACES the selection) would otherwise be re-read as an add and the
+    // previous node would stay selected.
+    const adding = e.ctrlKey || e.metaKey || e.shiftKey
+    if (editMode) {
+      setSelIds((prev) => {
+        if (!adding) return new Set([node.id])
+        const next = new Set(prev)
+        if (next.has(node.id)) next.delete(node.id)
+        else next.add(node.id)
+        return next
+      })
+    }
+    // a modifier click is building a multi-selection, not asking for the panel
+    if (adding) return
     onSelect(node.data.skill)
-  }, [editMode, editTool, linkFrom, byId, reqReaches, realmId, onSelect])
+  }, [editMode, editTool, labelTool, linkFrom, byId, reqReaches, realmId, onSelect, setSelIds])
 
-  const onNodeDrag = useCallback((_, node) => {
-    if (node.type === 'skill') setDragPos({ id: node.id, x: node.position.x, y: node.position.y })
+  // React Flow owns selection (click, ctrl-click, shift-drag box); we mirror it
+  // so the delete action and the node styling can read it. Guarded against
+  // no-op updates, since this fires on every store selection touch.
+  // Clicks maintain selIds themselves (see onNodeClick); this only has to catch
+  // the selections React Flow makes on its own — shift-drag marquee, and the
+  // node it auto-selects when you start dragging an unselected one.
+  const onSelectionChange = useCallback(({ nodes: sel }) => {
+    const next = new Set(sel.filter((n) => n.type === 'skill').map((n) => n.id))
+    setSelIds((prev) => (prev.size === next.size && [...next].every((id) => prev.has(id)) ? prev : next))
+  }, [setSelIds])
+
+  const onNodeDrag = useCallback((_, node, dragged) => {
+    const list = dragged?.length ? dragged : [node]
+    const next = {}
+    for (const n of list) next[n.id] = { x: n.position.x, y: n.position.y }
+    setDragPos(next)
   }, [])
 
-  const onNodeDragStop = useCallback((_, node) => {
+  const onNodeDragStop = useCallback((_, node, dragged) => {
     setDragPos(null)
-    if (node.type !== 'skill') return
-    const snap = pixelToAxial(node.position.x, -node.position.y)
-    const occupant = cellId.get(snap.q + ',' + snap.r)
-    // empty cell → move; own cell (no-op) or another node's cell → spring back,
-    // no vault write either way
-    if (occupant) return
-    moveSkill(realmId, node.id, snap)
-  }, [cellId, realmId])
+    // titles live in free pixel space — no lattice, no collision rules
+    if (node.type === 'branchLabel') {
+      setBranchLabel(realmId, node.data.label, {
+        x: Math.round(node.position.x),
+        y: Math.round(node.position.y),
+      })
+      return
+    }
+    const list = (dragged?.length ? dragged : [node]).filter((n) => n.type === 'skill')
+    const from = cellOf.get(node.id)
+    if (!list.length || !from) return
+
+    // The node under the cursor decides the lattice step; every other node in
+    // the selection takes the SAME (dq, dr). Snapping each one independently
+    // would shear the group apart — this way the arrangement is rigid.
+    const to = pixelToAxial(node.position.x, -node.position.y)
+    const dq = to.q - from.q
+    const dr = to.r - from.r
+    if (!dq && !dr) return // same cell → no-op, and no vault write
+
+    const moving = new Set(list.map((n) => n.id))
+    const moves = []
+    for (const n of list) {
+      const c = cellOf.get(n.id)
+      if (!c) return
+      const pos = { q: c.q + dq, r: c.r + dr }
+      const occupant = cellId.get(pos.q + ',' + pos.r)
+      // a landing cell held by anything outside the group → the WHOLE group
+      // springs back, so a move is all-or-nothing rather than half-applied
+      if (occupant && !moving.has(occupant)) return
+      moves.push({ id: n.id, pos })
+    }
+    moveSkills(realmId, moves)
+  }, [cellId, cellOf, realmId])
 
   const onEdgeClick = useCallback((_, edge) => {
     if (!editMode) return
@@ -304,7 +408,7 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, edi
       <LatticeBackground />
       {graphReady && (
         <ReactFlow
-          className={`rf-mount-in rf-lod-${lod} ${editMode ? 'rf-edit' : ''} ${editMode && editTool === 'link' ? 'rf-link' : ''}`}
+          className={`rf-mount-in rf-lod-${lod} ${editMode ? 'rf-edit' : ''} ${editMode && editTool === 'link' ? 'rf-link' : ''} ${labelTool ? 'rf-label' : ''}`}
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
@@ -312,15 +416,20 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, edi
           onNodeClick={onNodeClick}
           onNodeDrag={onNodeDrag}
           onNodeDragStop={onNodeDragStop}
+          onSelectionChange={onSelectionChange}
           onEdgeClick={onEdgeClick}
-          onPaneClick={() => { onSelect(null); setLinkFrom(null) }}
+          onPaneClick={() => { onSelect(null); setLinkFrom(null); setSelIds(new Set()) }}
           fitView
           fitViewOptions={{ padding: 0.1, maxZoom: 0.95 }}
           minZoom={0.1}
           maxZoom={2}
-          nodesDraggable={editMode && editTool === 'place'}
+          nodesDraggable={editMode && (editTool === 'place' || editTool === 'label')}
           nodesConnectable={false}
           edgesFocusable={editMode}
+          // Delete/Backspace is handled by Realm's own listener so it can run
+          // through the confirm step — React Flow's built-in would drop nodes
+          // from its internal store without ever reaching the vault.
+          deleteKeyCode={null}
           onlyRenderVisibleElements
           proOptions={{ hideAttribution: true }}
         />
@@ -328,7 +437,45 @@ function RealmFlow({ realmId, onSelect, selectedId, filter, focus, editMode, edi
       {pendingAt && (
         <SkillEditor realmId={realmId} at={pendingAt} branches={branches} onClose={() => setPendingAt(null)} />
       )}
+      {labelEdit && (
+        <BranchLabelEditor
+          realmId={realmId}
+          branch={labelEdit}
+          override={labels[labelEdit] || {}}
+          onClose={() => setLabelEdit(null)}
+        />
+      )}
     </>
+  )
+}
+
+// Deleting a skill is the one edit that can't be undone by dragging something
+// back, so it always goes through this — naming what's about to go.
+function DeleteConfirm({ skills, onCancel, onConfirm }) {
+  return (
+    <Modal onClose={onCancel}>
+      <form
+        className="skill-editor"
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => { e.preventDefault(); onConfirm() }}
+      >
+        <h3 className="skill-editor-title">Delete {skills.length === 1 ? 'skill' : `${skills.length} skills`}?</h3>
+        <ul className="skill-editor-list">
+          {skills.slice(0, 12).map((s) => (
+            <li key={s.id}>{s.icon || '◆'} {s.name}</li>
+          ))}
+          {skills.length > 12 && <li className="more">…and {skills.length - 12} more</li>}
+        </ul>
+        <p className="skill-editor-hint">
+          Any prerequisite link pointing at {skills.length === 1 ? 'it' : 'them'} is severed too.
+          Tracked progress is kept, in case this was a mistake.
+        </p>
+        <div className="skill-editor-actions">
+          <button type="button" className="realm-filter" onClick={onCancel}>cancel</button>
+          <button type="submit" className="realm-filter danger" autoFocus>delete</button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 
@@ -337,9 +484,43 @@ export default function Realm({ realmId, onSelect, selectedId, focus, graphReady
   const realm = tree.realms.find((r) => r.id === realmId)
   const [filter, setFilter] = useState('all')
   const [editMode, setEditMode] = useState(false)
-  const [editTool, setEditTool] = useState('place') // 'place' | 'link'
+  const [editTool, setEditTool] = useState('place') // 'place' | 'link' | 'label'
+  const [selIds, setSelIds] = useState(() => new Set()) // multi-selection (edit mode)
+  const [confirmDel, setConfirmDel] = useState(null) // skills queued for deletion
   const canEdit = tree.syncStatus === 'ready' // only editable against a live vault
+  const editing = editMode && canEdit
   useEffect(() => { if (!canEdit) setEditMode(false) }, [canEdit])
+  useEffect(() => { if (!editing) { setSelIds(new Set()); setConfirmDel(null) } }, [editing])
+
+  const askDelete = useCallback(() => {
+    const picked = tree.skills.filter((s) => s.realm === realmId && selIds.has(s.id))
+    if (picked.length) setConfirmDel(picked)
+  }, [tree.skills, realmId, selIds])
+
+  const doDelete = useCallback(() => {
+    const ids = confirmDel.map((s) => s.id)
+    deleteSkills(realmId, ids)
+    if (ids.includes(selectedId)) onSelect(null)
+    setSelIds(new Set())
+    setConfirmDel(null)
+  }, [confirmDel, realmId, selectedId, onSelect])
+
+  // Delete/Backspace on the selection. Ignored while a form has focus so it
+  // stays an ordinary editing key inside the create/rename dialogs.
+  useEffect(() => {
+    if (!editing) return
+    const onKey = (e) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      const t = e.target
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      if (!selIds.size || confirmDel) return
+      e.preventDefault()
+      askDelete()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [editing, selIds, confirmDel, askDelete])
+
   return (
     <div className="realm-canvas">
       <ReactFlowProvider>
@@ -349,11 +530,16 @@ export default function Realm({ realmId, onSelect, selectedId, focus, graphReady
           selectedId={selectedId}
           filter={filter}
           focus={focus}
-          editMode={editMode && canEdit}
+          editMode={editing}
           editTool={editTool}
           graphReady={graphReady}
+          selIds={selIds}
+          setSelIds={setSelIds}
         />
       </ReactFlowProvider>
+      {confirmDel && (
+        <DeleteConfirm skills={confirmDel} onCancel={() => setConfirmDel(null)} onConfirm={doDelete} />
+      )}
       <div className="realm-hud">
         <h2 className="realm-hud-name"><ScrambleText text={realm?.name || ''} /></h2>
         {realm?.end && <p className="realm-hud-end">🏁 {realm.end}</p>}
@@ -375,12 +561,12 @@ export default function Realm({ realmId, onSelect, selectedId, focus, graphReady
           >
             ✎ edit
           </button>
-          {editMode && canEdit && (
+          {editing && (
             <>
               <button
                 className={`realm-filter ${editTool === 'place' ? 'on' : ''}`}
                 onClick={() => setEditTool('place')}
-                title="Click empty cells to add skills; drag skills to reposition"
+                title="Click empty cells to add skills; drag to reposition (shift-drag or ctrl-click to grab several)"
               >
                 place
               </button>
@@ -391,9 +577,33 @@ export default function Realm({ realmId, onSelect, selectedId, focus, graphReady
               >
                 link
               </button>
+              <button
+                className={`realm-filter ${editTool === 'label' ? 'on' : ''}`}
+                onClick={() => setEditTool('label')}
+                title="Drag branch titles to move them; click one to rename or hide it"
+              >
+                titles
+              </button>
+              <button
+                className="realm-filter danger"
+                onClick={askDelete}
+                disabled={!selIds.size}
+                title={selIds.size ? 'Delete the selected skills (Del)' : 'Select skills first — click, ctrl-click, or shift-drag a box'}
+              >
+                delete{selIds.size > 1 ? ` ${selIds.size}` : ''}
+              </button>
             </>
           )}
         </div>
+        {editing && (
+          <p className="realm-edit-hint">
+            {editTool === 'place'
+              ? 'drag to move · ctrl-click or shift-drag a box for several · Del to remove'
+              : editTool === 'link'
+                ? 'click a prereq then its dependent · click a line to unlink'
+                : 'drag a title to move it · click a title to rename or hide it'}
+          </p>
+        )}
         <div className="realm-hud-legend">
           <span><i className="sw locked" /> sealed</span>
           <span><i className="sw unlocked" /> awakened</span>

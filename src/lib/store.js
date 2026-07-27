@@ -25,6 +25,7 @@ let state = {
   realms: BUNDLED.realms,
   skills: BUNDLED.skills,
   progress: BUNDLED.progress,
+  labels: BUNDLED.labels, // realmId -> { [branch]: { x, y, hidden } } branch-title overrides
   season: null, // optional System/arbor/season.json: { name, ends, ids: [] }
   logLines: [], // parsed tail of progress-log.md (the momentum layer)
   pending: 0,
@@ -80,6 +81,7 @@ async function pullTree() {
       realms: d.realms,
       skills: d.skills,
       progress: d.progress,
+      labels: d.labels || {},
       season: d.season,
       logLines: parseLog(d.log),
     }
@@ -87,11 +89,11 @@ async function pullTree() {
     else {
       // vault unreadable → keep the bundled tree visible, overlay cached progress
       const c = loadCache()
-      state = { ...state, realms: BUNDLED.realms, skills: BUNDLED.skills, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
+      state = { ...state, realms: BUNDLED.realms, skills: BUNDLED.skills, labels: BUNDLED.labels, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
     }
   } catch (e) {
     const c = loadCache()
-    state = { ...state, loaded: true, error: 'Could not read the vault folder — ' + (e?.message || e), realms: BUNDLED.realms, skills: BUNDLED.skills, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
+    state = { ...state, loaded: true, error: 'Could not read the vault folder — ' + (e?.message || e), realms: BUNDLED.realms, skills: BUNDLED.skills, labels: BUNDLED.labels, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
   }
   emit()
 }
@@ -126,6 +128,7 @@ export async function disconnectVault() {
     fileErrors: [],
     realms: BUNDLED.realms,
     skills: BUNDLED.skills,
+    labels: BUNDLED.labels,
     progress: { ...BUNDLED.progress, ...(c?.progress || {}) },
     season: null,
     logLines: [],
@@ -382,17 +385,24 @@ function uniqueId(base) {
   return `${base}-${i}`
 }
 
-async function pushSkillWrite(realmId, skillId, patch) {
+// Every definition write goes through here so the pending counter (and so the
+// auto-refresh guard + the ⇅ indicator) covers creates, moves, links, deletes
+// and label edits identically. `run` returns the vaultSync promise.
+async function pushVaultWrite(run) {
   if (!handle || state.syncStatus !== 'ready') return
   state = { ...state, pending: state.pending + 1 }
   emit()
   try {
-    await vault.writeSkill(handle, realmId, skillId, patch)
+    await run()
     state = { ...state, pending: Math.max(0, state.pending - 1) }
   } catch (e) {
     state = { ...state, pending: Math.max(0, state.pending - 1), error: 'sync failed — change kept locally (' + (e?.message || e) + ')' }
   }
   emit()
+}
+
+function pushSkillWrite(realmId, skillId, patch) {
+  return pushVaultWrite(() => vault.writeSkill(handle, realmId, skillId, patch))
 }
 
 export function createSkill(realmId, { name, branch, icon, req = [], pos }) {
@@ -418,8 +428,109 @@ export function moveSkill(realmId, skillId, pos) {
   patchSkill(realmId, skillId, { pos })
 }
 
+// Group move: every skill keeps its relative place, so the whole selection is
+// one file rewrite (and one undo-sized unit of intent) rather than N.
+// `moves` = [{ id, pos: { q, r } }]
+export function moveSkills(realmId, moves) {
+  if (!moves.length) return
+  const byId = new Map(moves.map((m) => [m.id, m.pos]))
+  state = {
+    ...state,
+    skills: state.skills.map((s) =>
+      byId.has(s.id) && s.realm === realmId ? { ...s, pos: byId.get(s.id) } : s,
+    ),
+  }
+  emit()
+  pushVaultWrite(() =>
+    vault.writeSkills(handle, realmId, moves.map((m) => ({ id: m.id, patch: { pos: m.pos } }))),
+  )
+}
+
 export function updateSkillReq(realmId, skillId, req) {
   patchSkill(realmId, skillId, { req })
+}
+
+// Delete skills and sever every reference to them. In-realm req/xref cleanup
+// happens inside the same file rewrite (vaultSync.deleteSkills); cross-realm
+// xrefs are patched per referring realm. Progress records are deliberately
+// LEFT alone — progress.json is shared with agents and a stale key is inert,
+// whereas dropping history on a mis-click is not recoverable from the app.
+export function deleteSkills(realmId, ids) {
+  const gone = new Set(ids)
+  if (!gone.size) return
+
+  // cross-realm xrefs ("realm:id") that pointed into the deleted set
+  const xrefPatches = {} // realmId -> [{ id, patch }]
+  const strip = (s) => {
+    if (s.realm === realmId) {
+      const req = (s.req || []).filter((r) => !gone.has(r))
+      return req.length === (s.req || []).length ? s : { ...s, req }
+    }
+    const xref = (s.xref || []).filter((x) => !(x.startsWith(realmId + ':') && gone.has(x.slice(realmId.length + 1))))
+    if (xref.length === (s.xref || []).length) return s
+    ;(xrefPatches[s.realm] = xrefPatches[s.realm] || []).push({ id: s.id, patch: { xref } })
+    return { ...s, xref }
+  }
+
+  state = {
+    ...state,
+    skills: state.skills.filter((s) => !(gone.has(s.id) && s.realm === realmId)).map(strip),
+  }
+  emit()
+
+  pushVaultWrite(() => vault.deleteSkills(handle, realmId, [...gone]))
+  for (const [r, patches] of Object.entries(xrefPatches)) {
+    pushVaultWrite(() => vault.writeSkills(handle, r, patches))
+  }
+}
+
+// ── edit mode: branch titles ──────────────────────────────────────────────
+// A branch has no record of its own — it exists because skills name it. So a
+// title's position/visibility is an override keyed by branch name, stored per
+// realm; renaming one is really a rename across every skill in that branch.
+export function labelsOf(realmId, s = state) {
+  return s.labels?.[realmId] || {}
+}
+
+function writeLabels(realmId, labels, patches = []) {
+  state = { ...state, labels: { ...state.labels, [realmId]: labels } }
+  emit()
+  pushVaultWrite(() => vault.writeLabels(handle, realmId, labels, patches))
+}
+
+// patch === null removes the override entirely (title snaps back to auto)
+export function setBranchLabel(realmId, branch, patch) {
+  const cur = labelsOf(realmId)
+  const next = { ...cur }
+  if (patch === null) delete next[branch]
+  else next[branch] = { ...(cur[branch] || {}), ...patch }
+  writeLabels(realmId, next)
+}
+
+export function renameBranch(realmId, from, to) {
+  const name = String(to).trim()
+  if (!name || name === from) return
+  const patches = state.skills
+    .filter((s) => s.realm === realmId && s.branch === from)
+    .map((s) => ({ id: s.id, patch: { branch: name } }))
+  if (!patches.length) return
+
+  const cur = labelsOf(realmId)
+  const nextLabels = { ...cur }
+  if (cur[from]) {
+    // carry the override across, but don't clobber one the target already has
+    if (!nextLabels[name]) nextLabels[name] = cur[from]
+    delete nextLabels[from]
+  }
+
+  state = {
+    ...state,
+    skills: state.skills.map((s) => (s.realm === realmId && s.branch === from ? { ...s, branch: name } : s)),
+    labels: { ...state.labels, [realmId]: nextLabels },
+  }
+  emit()
+  // one rewrite: the branch rename on every member skill AND the moved override
+  pushVaultWrite(() => vault.writeLabels(handle, realmId, nextLabels, patches))
 }
 
 // ── aggregate stats (weighted, R4) ─────────────────────────────────────────

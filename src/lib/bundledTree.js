@@ -15,10 +15,12 @@ const skillFiles = import.meta.glob('../../data/skills/*.json', { eager: true, i
 const realms = realmsFile.realms || []
 
 const skills = []
+const labels = {} // realmId -> { [branch]: { x, y, hidden } } — branch-title overrides
 for (const [path, file] of Object.entries(skillFiles)) {
   const realm = path.match(/([a-z]+)\.json$/)?.[1]
   if (!realm) continue
   for (const s of file.skills || []) skills.push({ ...s, realm })
+  if (file.labels) labels[realm] = file.labels
 }
 
-export const BUNDLED = { realms, skills, progress: progressSeed || {} }
+export const BUNDLED = { realms, skills, progress: progressSeed || {}, labels }

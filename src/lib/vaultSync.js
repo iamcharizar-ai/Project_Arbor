@@ -55,6 +55,7 @@ export async function readTree(dirHandle) {
   }
 
   const skills = []
+  const labels = {} // realmId -> { [branch]: { x, y, hidden } }
   let skillsDir = null
   try {
     skillsDir = await dirHandle.getDirectoryHandle('skills')
@@ -66,6 +67,10 @@ export async function readTree(dirHandle) {
       try {
         const file = await readJSON(skillsDir, r + '.json')
         for (const s of file.skills) skills.push({ ...s, realm: r })
+        // branch-title overrides live alongside the skills, in the same file:
+        // moving/hiding/renaming a title is a realm-level edit, and keeping it
+        // here means one file per realm still holds everything about that realm.
+        if (file.labels) labels[r] = file.labels
       } catch (e) {
         errors.push('skills/' + r + '.json: ' + msg(e))
       }
@@ -87,7 +92,7 @@ export async function readTree(dirHandle) {
   }
 
   const log = await readLogTail(dirHandle)
-  return { realms, skills, progress, season, log, errors }
+  return { realms, skills, progress, season, log, labels, errors }
 }
 
 // Writes are serialized through a queue so two debounced flushes can't
@@ -113,15 +118,16 @@ export function writeProgress(dirHandle, id, rec, line) {
   return job
 }
 
-// Skill-definition writes (edit mode: create / reposition / re-link). Same
-// read-modify-write safety as writeProgress, but queued PER REALM FILE so a
-// write to one realm's skills never blocks a write to another's. Each job
-// re-reads the file fresh inside the queue, so an agent's concurrent hand-edit
-// to a different skill in the same file is preserved. `patch` must not carry a
-// `realm` field — realm is derived from the filename on read.
+// Realm-file writes (edit mode: create / reposition / re-link / delete, plus
+// branch-title overrides). Same read-modify-write safety as writeProgress, but
+// queued PER REALM FILE so a write to one realm never blocks a write to
+// another's. Every job re-reads the file fresh inside the queue, so an agent's
+// concurrent hand-edit elsewhere in the same file is preserved. Patches must
+// not carry a `realm` field — realm is derived from the filename on read.
 const skillWriteQueues = {} // realmId -> Promise chain
 
-export function writeSkill(dirHandle, realmId, skillId, patch) {
+// `mutate` receives the parsed file and returns the file to write back.
+function mutateRealmFile(dirHandle, realmId, mutate) {
   const prev = skillWriteQueues[realmId] || Promise.resolve()
   const job = prev.catch(() => {}).then(async () => {
     const skillsDir = await dirHandle.getDirectoryHandle('skills')
@@ -132,16 +138,62 @@ export function writeSkill(dirHandle, realmId, skillId, patch) {
     } catch {
       file = { skills: [] }
     }
-    const skills = file.skills || []
-    const idx = skills.findIndex((s) => s.id === skillId)
-    const next =
-      idx === -1
-        ? [...skills, { id: skillId, ...patch }]
-        : skills.map((s, i) => (i === idx ? { ...s, ...patch } : s))
-    await writeJSON(skillsDir, name, { ...file, skills: next })
+    await writeJSON(skillsDir, name, mutate({ ...file, skills: file.skills || [] }))
   })
   skillWriteQueues[realmId] = job
   return job
+}
+
+const applyPatches = (skills, patches) => {
+  const byId = new Map(patches.map((p) => [p.id, p.patch]))
+  const next = skills.map((s) => (byId.has(s.id) ? { ...s, ...byId.get(s.id) } : s))
+  // ids the file doesn't know yet are creates — append in the given order
+  const known = new Set(skills.map((s) => s.id))
+  for (const p of patches) if (!known.has(p.id)) next.push({ id: p.id, ...p.patch })
+  return next
+}
+
+export function writeSkill(dirHandle, realmId, skillId, patch) {
+  return writeSkills(dirHandle, realmId, [{ id: skillId, patch }])
+}
+
+// One file rewrite for many skills — a group move or a branch rename would
+// otherwise queue N sequential rewrites of the same file.
+export function writeSkills(dirHandle, realmId, patches) {
+  return mutateRealmFile(dirHandle, realmId, (file) => ({
+    ...file,
+    skills: applyPatches(file.skills, patches),
+  }))
+}
+
+// Delete skills and, in the same rewrite, strip every remaining reference to
+// them from this file's req/xref lists — a dangling req would otherwise fail
+// validation and drop the referring skill's edge on the next load.
+export function deleteSkills(dirHandle, realmId, ids) {
+  const gone = new Set(ids)
+  return mutateRealmFile(dirHandle, realmId, (file) => ({
+    ...file,
+    skills: file.skills
+      .filter((s) => !gone.has(s.id))
+      .map((s) => {
+        const req = (s.req || []).filter((r) => !gone.has(r))
+        const xref = (s.xref || []).filter((x) => !gone.has(x.slice(realmId.length + 1)) || !x.startsWith(realmId + ':'))
+        if (req.length === (s.req || []).length && xref.length === (s.xref || []).length) return s
+        const next = { ...s, req }
+        if (s.xref) next.xref = xref
+        return next
+      }),
+  }))
+}
+
+// Branch-title overrides: { [branch]: { x, y, hidden } }. Written whole, since
+// the app holds the complete map for the realm.
+export function writeLabels(dirHandle, realmId, labels, patches = []) {
+  return mutateRealmFile(dirHandle, realmId, (file) => {
+    const next = { ...file, skills: applyPatches(file.skills, patches), labels }
+    if (!Object.keys(labels).length) delete next.labels
+    return next
+  })
 }
 
 export async function loadSavedHandle() {

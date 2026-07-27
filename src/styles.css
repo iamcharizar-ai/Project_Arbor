@@ -327,7 +327,9 @@ html, body, #root {
 .sw.mastered { border-color: var(--mastered); background: rgba(163, 230, 53, 0.2); }
 
 /* realm filters */
-.realm-filters { display: flex; gap: 8px; pointer-events: auto; }
+/* wraps because edit mode adds four more buttons to this row — on a narrow
+   window the unwrapped line ran off the right edge */
+.realm-filters { display: flex; flex-wrap: wrap; gap: 8px; pointer-events: auto; max-width: calc(100vw - 64px); }
 .realm-filter {
   background: var(--bg-card); border: 2px solid var(--border);
   color: var(--text-dim); font-family: var(--mono); font-size: 11px; font-weight: 700;
@@ -416,6 +418,18 @@ html, body, #root {
   color: var(--text-dim); pointer-events: none; white-space: nowrap;
   font-family: var(--mono);
 }
+/* only in the `titles` edit tool: the label becomes a grabbable object, with a
+   dashed box so its footprint (and the empty space it reserves) is visible */
+.branch-label.label-editable {
+  pointer-events: auto; cursor: grab;
+  padding: 2px 8px; margin: -2px -8px;
+  border: 2px dashed var(--border); color: var(--text);
+  background: rgba(0, 0, 0, 0.4);
+}
+.branch-label.label-editable:hover { border-color: var(--unlocked); color: var(--unlocked); }
+.branch-label.label-editable:active { cursor: grabbing; }
+/* a hidden title, shown ghosted while the tool is open so it can be brought back */
+.branch-label.label-hidden { opacity: 0.4; text-decoration: line-through; }
 
 /* ─── detail panel ─── */
 .panel {
@@ -754,6 +768,10 @@ html, body, #root {
 /* ─── LOD for zoom levels (performance) ─── */
 .rf-lod-1 .branch-label { display: none; }
 .rf-lod-2 .branch-label { display: none; }
+/* …except in the titles tool, where the titles ARE the thing being edited —
+   culling them there just makes the tool look broken until you zoom in */
+.rf-label.rf-lod-1 .branch-label,
+.rf-label.rf-lod-2 .branch-label { display: block; }
 .rf-lod-2 .sk-star, .rf-lod-2 .sk-adapt { display: none; }
 .rf-lod-2 .burst { display: none; }
 
@@ -815,8 +833,10 @@ html, body, #root {
 .sk.link-armed .sk-circle { border-color: var(--inprogress) !important; box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.45), 3px 3px 0 rgba(0, 0, 0, 0.7); }
 
 /* create-skill modal */
+/* fixed + above .panel (z-index 100): these are modals, and an open detail
+   panel was covering the delete confirmation */
 .skill-editor-scrim {
-  position: absolute; inset: 0; z-index: 50;
+  position: fixed; inset: 0; z-index: 200;
   display: grid; place-items: center; background: rgba(0, 0, 0, 0.55);
 }
 .skill-editor {
@@ -835,3 +855,36 @@ html, body, #root {
 .skill-editor-field input:focus { outline: none; border-color: var(--border-strong); }
 .skill-editor-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
 .skill-editor-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+.skill-editor-row { display: flex; gap: 8px; }
+.skill-editor-row button { flex: 1; }
+.skill-editor-row button:disabled { opacity: 0.4; cursor: not-allowed; }
+.skill-editor-hint { font-size: 11px; line-height: 1.5; color: var(--text-dim); margin-top: -6px; }
+.skill-editor-list {
+  list-style: none; margin: 0; padding: 10px 12px; max-height: 190px; overflow-y: auto;
+  background: var(--bg-soft); border: 2px solid var(--border);
+  font-size: 13px; line-height: 1.7; color: var(--text);
+}
+.skill-editor-list .more { color: var(--text-dim); font-size: 11px; font-family: var(--mono); }
+
+/* destructive action — reads as a warning without leaving the palette */
+.realm-filter.danger { border-color: var(--inprogress); color: var(--inprogress); }
+.realm-filter.danger:hover:not(:disabled) { background: var(--inprogress); border-color: #000; color: #000; }
+.realm-filter.danger:disabled { opacity: 0.35; cursor: not-allowed; }
+.realm-filter.danger:disabled:hover {
+  transform: none; background: var(--bg-card); border-color: var(--inprogress);
+  color: var(--inprogress); box-shadow: var(--shadow-hard-sm);
+}
+
+/* one-line reminder of what the active tool does */
+.realm-edit-hint {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em;
+  color: var(--text-dim); text-transform: uppercase; margin-top: -8px;
+}
+
+/* multi-selection: React Flow's marquee + the selected-node ring */
+.rf-edit .react-flow__selection {
+  background: rgba(250, 204, 21, 0.08);
+  border: 2px dashed var(--unlocked);
+}
+.rf-edit .sk.selected .sk-circle { box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.5), 4px 4px 0 rgba(0, 0, 0, 0.8); }
+.rf-label .react-flow__node-skill { pointer-events: none; } /* titles only, no stray node drags */

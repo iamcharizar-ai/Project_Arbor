@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createSkill } from '../lib/store.js'
+import Modal from './Modal.jsx'
 
 // Lightweight create-a-skill form, opened by clicking an empty lattice cell in
 // edit mode. Styled off the panel look (see .skill-editor in styles.css) rather
@@ -22,7 +23,7 @@ export default function SkillEditor({ realmId, at, branches, onClose }) {
   }
 
   return (
-    <div className="skill-editor-scrim" onClick={onClose}>
+    <Modal onClose={onClose}>
       <form className="skill-editor" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
         <h3 className="skill-editor-title">New skill</h3>
         <p className="skill-editor-cell">on cell ({at.q}, {at.r})</p>
@@ -50,6 +51,6 @@ export default function SkillEditor({ realmId, at, branches, onClose }) {
           <button type="submit" className="realm-filter on" disabled={!name.trim()}>create</button>
         </div>
       </form>
-    </div>
+    </Modal>
   )
 }
