@@ -11,7 +11,7 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = join(HERE, '..')
 const SRC = process.argv[2] || 'G:\\My Drive\\My Files\\Obsidian Vault\\System\\arbor'
 const DEST = join(REPO, 'data')
-const REALMS = ['cal', 'mob', 'mov', 'mus', 'aes', 'dex', 'tec', 'car', 'fin', 'bok', 'soc']
+const REALMS = ['cal', 'mob', 'mov', 'mus', 'aes', 'dex', 'tec', 'car', 'cat', 'fin', 'bok', 'soc']
 
 if (!existsSync(SRC)) {
   console.error(`✗ vault source not found: ${SRC}\n  (pass the System/arbor path as an argument)`)

@@ -9,6 +9,7 @@
     { "id": "dex", "name": "Dexterity & Tricks", "sub": "hands · props · party skills", "hue": 55, "end": "Five party-grade skill combos on film" },
     { "id": "tec", "name": "Tech & Craft", "sub": "code · AI · maker", "hue": 200, "end": "AI engineer who ships — a portfolio that gets interviews" },
     { "id": "car", "name": "Career", "sub": "placement · CAT · interviews", "hue": 90, "end": "A signed placement offer on an A-grade PS2 — the credential floor cleared" },
+    { "id": "cat", "name": "CAT Prep", "sub": "VARC · Quant · DILR", "hue": 355, "end": "99th+ percentile across all three sections — a profile that clears the shortlist" },
     { "id": "fin", "name": "Finance", "sub": "Etsy store · family ventures", "hue": 45, "end": "Income that isn't a salary: the shop live, family ventures papered, the house fund alive" },
     { "id": "bok", "name": "Books", "sub": "the reading list", "hue": 240, "end": "The shelf read, not just bought — ideas that compound" },
     { "id": "soc", "name": "Voice & Presence", "sub": "communication · content · social", "hue": 300, "end": "A voice and presence people remember — online and in the room" }
