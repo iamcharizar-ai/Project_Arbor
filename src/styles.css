@@ -113,6 +113,11 @@ html, body, #root {
   cursor: pointer; transition: color 0.15s;
 }
 .brand:hover { color: var(--unlocked); }
+.app-version {
+  margin-left: -8px;
+  color: var(--text-dim); font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; opacity: 0.6;
+}
 .crumbs { color: var(--text-mid); font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
 .crumb-sep { margin-right: 12px; opacity: 0.3; }
 .top-right { margin-left: auto; display: flex; align-items: center; gap: 20px; }

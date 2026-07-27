@@ -126,6 +126,7 @@ export default function App() {
           <Wheel turns={stats.pts / 10} size={18} className="brand-wheel" pulse={tree.pulse} />
           ARBOR
         </button>
+        <span className="app-version" title={`ARBOR v${__APP_VERSION__}`}>v{__APP_VERSION__}</span>
         {realm && (
           <nav className="crumbs">
             <span className="crumb-sep">/</span>
