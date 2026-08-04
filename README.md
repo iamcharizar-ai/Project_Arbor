@@ -1,5 +1,10 @@
 # ARBOR - a living skill tree for real life
 
+**Live**: https://arbor-umber.vercel.app · 445 skills across 11 realms · React + Vite (JavaScript)
+
+**Status (as of 2026-07-21)**: v3.0 bundles the skill tree at build time, so it runs standalone with no vault connection required — the description below (file-backed via a connected Obsidian folder) was the original v1/v2 design and still works if you connect a vault, but the deployed build no longer needs one. Built solo, self-taught, no backend server.
+
+
 ARBOR is a visual "skill tree" website, like the ones in video games, but for real-life self-improvement. Instead of leveling up a fake character, you level up actual skills - calisthenics, guitar, mobility, coding, and more - and watch a glowing tree of nodes fill in as you improve.
 
 ## The idea in plain terms
