@@ -1,361 +1,147 @@
-// TRUE TRIANGULAR LATTICE (60°/120°), axial hex coordinates.
-//  1. Points live on the axial lattice (q, r). The six unit directions are the
-//     three lattice-line families — E/W (0°), NE/SW (60°/240°), NW/SE
-//     (120°/300°) — so every edge the layout emits is one of exactly three
-//     angles. axialToPixel shears each row right by r/2 columns, which is what
-//     keeps those three angles pure (a triangular lattice IS a sheared grid).
-//  2. Crossing prevention reduces to plain occupancy: on a triangulated
-//     lattice two unit segments can only meet at a shared endpoint, never
-//     mid-segment. A double-jump (2× a unit direction) reserves its exact
-//     midpoint through-cell, so double edges are crossing-safe the same way.
-//  3. Wide, not tall: chains serpentine sideways, branch blocks tetris-pack
-//     into a landscape field — the whole realm fits without zooming out.
-//  4. Branch titles go wherever there IS space next to the block.
-//  5. Hybrid: a skill may pin an absolute { q, r } via its `pos` field; pinned
-//     nodes are placed exactly there and auto-placed blocks pack around them.
-//     No `pos` → auto-placed exactly as if the feature didn't exist.
-// GX must equal GY for a true 60°/120° lattice. 88 (not 64) so that after the
-// RIM=30 edge trim in Realm.jsx every one of the three angles keeps a uniform
-// visible segment.
-export const GX = 88 // px per lattice column
-export const GY = 88 // px per lattice row
+// Columnar progression layout — Wings-style.
+// Each branch is a vertical column: roots at the bottom, harder skills above.
+// Intra-branch depth uses only same-branch prerequisites so a column reads as
+// one clear difficulty ladder. Cross-branch reqs still draw as edges.
 
-const SQRT3_2 = Math.sqrt(3) / 2
-const K = (q, r) => q + ',' + r
+export const NODE = 88
+export const COL_GAP = 96
+export const FAMILY_GAP = 64
+export const ROW_H = 168
+export const SIB_GAP = 28
 
-// axial (q,r) → pixel. y grows downward here; Realm renders with -y so the
-// tree climbs upward on screen (children at higher r sit above their parent).
-export function axialToPixel(q, r) {
-  return { x: GX * (q + r / 2), y: GY * SQRT3_2 * r }
+// Wings pillars first (the six body-skill columns), then mobility + movement.
+const BRANCH_ORDER = [
+  'Physical Foundations',
+  'Horizontal Push',
+  'Vertical Push',
+  'Horizontal Pull',
+  'Vertical Pull',
+  'Core',
+  'Legs',
+  'Mobility Foundations',
+  'Flexibility',
+  'Arm Balances',
+  'Yoga Holds',
+  'Acrobatics Foundations',
+  'Kicks',
+  'Flips & Twists',
+  'Breaking',
+  'Dance',
+]
+
+const FAMILY_OF_BRANCH = {
+  'Physical Foundations': 'cal',
+  'Horizontal Push': 'cal',
+  'Vertical Push': 'cal',
+  'Horizontal Pull': 'cal',
+  'Vertical Pull': 'cal',
+  'Core': 'cal',
+  'Legs': 'cal',
+  'Mobility Foundations': 'mob',
+  'Flexibility': 'mob',
+  'Arm Balances': 'mob',
+  'Yoga Holds': 'mob',
+  'Acrobatics Foundations': 'mov',
+  'Kicks': 'mov',
+  'Flips & Twists': 'mov',
+  'Breaking': 'mov',
+  'Dance': 'mov',
 }
 
-// pixel → nearest lattice point, via cube-coordinate rounding. Needed by
-// edit-mode drag-snap. Inverse of axialToPixel.
-export function pixelToAxial(x, y) {
-  const rf = y / (GY * SQRT3_2)
-  const qf = x / GX - rf / 2
-  const sf = -qf - rf
-  let q = Math.round(qf), r = Math.round(rf), s = Math.round(sf)
-  const dq = Math.abs(q - qf), dr = Math.abs(r - rf), ds = Math.abs(s - sf)
-  if (dq > dr && dq > ds) q = -r - s
-  else if (dr > ds) r = -q - s
-  return { q, r }
+function branchDepth(members) {
+  const ids = new Set(members.map((s) => s.id))
+  const byId = Object.fromEntries(members.map((s) => [s.id, s]))
+  const depth = {}
+  const visiting = new Set()
+  const of = (id) => {
+    if (depth[id] != null) return depth[id]
+    if (visiting.has(id)) return 0
+    visiting.add(id)
+    const local = (byId[id]?.req || []).filter((r) => ids.has(r))
+    depth[id] = local.length ? 1 + Math.max(...local.map(of)) : 0
+    visiting.delete(id)
+    return depth[id]
+  }
+  for (const s of members) of(s.id)
+  return depth
 }
 
-// unit directions, named for readability in place()
-const E = [1, 0], NE = [0, 1], NW = [-1, 1], W = [-1, 0], SW = [0, -1], SE = [1, -1]
-const HEXN = [E, NE, NW, W, SW, SE] // the 6 neighbours, for packing buffer
-
-// labelOverrides: { [branch]: { x, y, hidden } } — a title the user has dragged,
-// hidden, or both. A pinned title skips the auto search entirely; a hidden one
-// still gets an auto position (so it can be shown again in the label tool) but
-// reserves no lattice cells, freeing that space for nodes.
-export function layoutRealm(allSkills, realmId, labelOverrides = {}) {
-  const skills = allSkills.filter((s) => s.realm === realmId)
+export function layoutTree(skills) {
   const byId = Object.fromEntries(skills.map((s) => [s.id, s]))
-  const branches = [...new Set(skills.map((s) => s.branch))]
+  const present = new Set(skills.map((s) => s.branch))
+  const branches = [
+    ...BRANCH_ORDER.filter((b) => present.has(b)),
+    ...[...present].filter((b) => !BRANCH_ORDER.includes(b)),
+  ]
 
-  // ── pinned positions: absolute (q,r). First writer wins a contested cell;
-  //    a colliding pin falls back to auto-placement (never crash bad data). ──
-  const pinnedPos = {}        // id -> { q, r }
-  const pinnedOcc = new Set() // "q,r" of accepted pins
-  for (const s of skills) {
-    if (!s.pos || !Number.isInteger(s.pos.q) || !Number.isInteger(s.pos.r)) continue
-    const key = K(s.pos.q, s.pos.r)
-    if (pinnedOcc.has(key)) {
-      console.warn(`arbor layout: pinned collision at (${key}) — ${s.id} falls back to auto`)
-      continue
-    }
-    pinnedOcc.add(key)
-    pinnedPos[s.id] = { q: s.pos.q, r: s.pos.r }
-  }
+  const nodes = []
+  const pos = {}
+  let xCursor = 0
+  let prevFamily = null
 
-  // Edges the placement algorithm produced on a clean single lattice line
-  // (unit or double). Everything else — secondary reqs, cross-branch links,
-  // pinned-to-far-child, tier-3 desperation — renders dashed/hidden-unless-
-  // selected, so the always-visible edges are exactly the lattice-aligned ones.
-  const cleanEdges = new Set() // "parent->child"
-
-  // ── per-branch: build tree over AUTO members, lay on a local lattice ──────
-  const blocks = []
   for (const branch of branches) {
-    const members = skills.filter((s) => s.branch === branch && !pinnedPos[s.id])
+    const members = skills.filter((s) => s.branch === branch)
     if (!members.length) continue
-    const memberIds = new Set(members.map((s) => s.id))
-    const parentOf = {}
-    const kids = {}
+    const family = members[0].family || FAMILY_OF_BRANCH[branch] || 'cal'
+    if (prevFamily && prevFamily !== family) xCursor += FAMILY_GAP
+    prevFamily = family
+
+    const depth = branchDepth(members)
+    const byDepth = new Map()
     for (const s of members) {
-      // a req pointing at a pinned sibling isn't in memberIds → no local parent
-      // → this member becomes an extra local root (branches already routinely
-      // have several roots, so this reuses an existing path, not a new one).
-      const p = (s.req || []).find((r) => memberIds.has(r))
-      parentOf[s.id] = p || null
-      if (p) (kids[p] = kids[p] || []).push(s.id)
+      const d = depth[s.id] || 0
+      if (!byDepth.has(d)) byDepth.set(d, [])
+      byDepth.get(d).push(s)
     }
-    const roots = members.filter((s) => !parentOf[s.id]).map((s) => s.id)
-
-    const treeSize = {}
-    const visiting = new Set()
-    const sizeOf = (id) => {
-      if (treeSize[id]) return treeSize[id]
-      if (visiting.has(id)) return 1 // cycle guard — hand/edit-mode data can loop
-      visiting.add(id)
-      treeSize[id] = 1 + (kids[id] || []).reduce((a, c) => a + sizeOf(c), 0)
-      visiting.delete(id)
-      return treeSize[id]
-    }
-    roots.forEach(sizeOf)
-
-    const cells = new Map()     // "q,r" -> id
-    const edgeCells = new Set() // "q,r" through-cells swept by double-jump edges
-    const pos = {}              // id -> { q, r }
-    const taken = (q, r) => cells.has(K(q, r)) || edgeCells.has(K(q, r))
-
-    // Place childId reached from (pq,pr): tier-1 unit step in dirOrder, then
-    // tier-2 double step (through-cell must be free), then tier-3 ring scan.
-    // Tiers 1-2 land on a clean lattice line → recorded in cleanEdges.
-    const settle = (parentId, childId, pq, pr, dirOrder) => {
-      for (const [dq, dr] of dirOrder) {
-        const q = pq + dq, r = pr + dr
-        if (!taken(q, r)) {
-          cells.set(K(q, r), childId); pos[childId] = { q, r }
-          cleanEdges.add(parentId + '->' + childId)
-          return { q, r }
-        }
-      }
-      for (const [dq, dr] of dirOrder) {
-        const tq = pq + dq, tr = pr + dr        // midpoint through-cell
-        const q = pq + 2 * dq, r = pr + 2 * dr
-        if (!taken(tq, tr) && !taken(q, r)) {
-          cells.set(K(q, r), childId); pos[childId] = { q, r }
-          edgeCells.add(K(tq, tr))
-          cleanEdges.add(parentId + '->' + childId)
-          return { q, r }
-        }
-      }
-      // desperate: expanding hex ring — always terminates, edge not clean
-      for (let rad = 1; rad < 80; rad++) {
-        for (let ddq = -rad; ddq <= rad; ddq++) {
-          for (let ddr = -rad; ddr <= rad; ddr++) {
-            if ((Math.abs(ddq) + Math.abs(ddr) + Math.abs(ddq + ddr)) / 2 !== rad) continue
-            const q = pq + ddq, r = pr + ddr
-            if (!taken(q, r)) {
-              cells.set(K(q, r), childId); pos[childId] = { q, r }
-              return { q, r }
-            }
-          }
-        }
-      }
-      return null
+    for (const group of byDepth.values()) {
+      group.sort((a, b) => (b.star ? 1 : 0) - (a.star ? 1 : 0) || a.name.localeCompare(b.name))
     }
 
-    // d>0 leads the up-right diagonal (NE), d<0 leads up-left (NW) — the
-    // serpentine. Chains zigzag; hubs fan the ordered children around,
-    // up-biased, each starting at a distinct direction.
-    const place = (id, d) => {
-      const children = (kids[id] || []).slice().sort((a, b) => sizeOf(b) - sizeOf(a))
-      const at = pos[id]
-      const n = children.length
-      for (let i = 0; i < n; i++) {
-        const c = children[i]
-        let dirOrder
-        if (n === 1) {
-          dirOrder = d >= 0 ? [NE, NW, E, W, SE, SW] : [NW, NE, W, E, SW, SE]
-        } else {
-          const fan = d >= 0 ? [NE, NW, E, SE, W, SW] : [NW, NE, W, SW, E, SE]
-          const start = Math.min(i, fan.length - 1)
-          dirOrder = [...fan.slice(start), ...fan.slice(0, start)]
-        }
-        if (pos[c]) continue // already placed (a req cycle) — don't re-place or recurse
-        const got = settle(id, c, at.q, at.r, dirOrder)
-        if (!got) continue
-        // flip serpentine by the horizontal drift of the step just taken
-        const driftX = (got.q - at.q) + (got.r - at.r) / 2
-        place(c, driftX > 0 ? -1 : driftX < 0 ? 1 : d)
-      }
+    const maxRow = Math.max(...[...byDepth.values()].map((g) => g.length), 1)
+    const colW = Math.max(maxRow * (NODE + SIB_GAP), 220)
+
+    for (const [d, group] of byDepth) {
+      const rowW = group.length * (NODE + SIB_GAP) - SIB_GAP
+      const startX = xCursor + (colW - rowW) / 2
+      group.forEach((s, i) => {
+        const x = startX + i * (NODE + SIB_GAP)
+        const y = d * ROW_H
+        pos[s.id] = { x, y }
+        nodes.push({
+          id: s.id,
+          type: 'skill',
+          position: { x, y },
+          data: { skill: s, depth: d },
+        })
+      })
     }
 
-    let rootQ = 0
-    for (const rt of roots.sort((a, b) => sizeOf(b) - sizeOf(a))) {
-      while (taken(rootQ, 0)) rootQ += 2
-      cells.set(K(rootQ, 0), rt); pos[rt] = { q: rootQ, r: 0 }
-      place(rt, 1)
-      rootQ += 4 // gap between sibling root subtrees
-    }
-
-    // safety net: a req cycle (or a self-req typo) leaves members with no root,
-    // so the loop above would never place them and they'd silently vanish from
-    // the canvas. Seed any still-unplaced member as its own root — the pos[c]
-    // guard in place() keeps the cycle from recursing forever.
-    for (const m of members) {
-      if (pos[m.id]) continue
-      while (taken(rootQ, 0)) rootQ += 2
-      cells.set(K(rootQ, 0), m.id); pos[m.id] = { q: rootQ, r: 0 }
-      place(m.id, 1)
-      rootQ += 4
-    }
-
-    // normalize to a 0-based footprint; include edgeCells so a neighbouring
-    // block can't pack a node onto a cell one of our edges passes through
-    let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity
-    const footprint = []
-    for (const id of Object.keys(pos)) footprint.push([pos[id].q, pos[id].r])
-    for (const key of edgeCells) footprint.push(key.split(',').map(Number))
-    for (const [q, r] of footprint) {
-      minQ = Math.min(minQ, q); maxQ = Math.max(maxQ, q)
-      minR = Math.min(minR, r); maxR = Math.max(maxR, r)
-    }
-    for (const id of Object.keys(pos)) { pos[id].q -= minQ; pos[id].r -= minR }
-    const cellList = footprint.map(([q, r]) => [q - minQ, r - minR])
-    blocks.push({
-      branch, pos, cells: cellList,
-      w: maxQ - minQ + 1, h: maxR - minR + 1, n: members.length,
-    })
-  }
-
-  // ── tetris-pack blocks onto the shared lattice, seeded with pinned cells ──
-  // 1-cell (self + 6 neighbours) buffer ⇒ no two blocks share or touch an
-  // occupied cell ⇒ zero cross-block crossings. The field is deliberately WIDE.
-  const totalCells = blocks.reduce((a, b) => a + b.n, 0)
-  const fieldW = Math.max(...blocks.map((b) => b.w), Math.ceil(Math.sqrt(totalCells || 1) * 2.3))
-  const global = new Set(pinnedOcc)
-  const fits = (block, oq, or) => {
-    for (const [cq, cr] of block.cells) {
-      if (global.has(K(cq + oq, cr + or))) return false
-      for (const [dq, dr] of HEXN) if (global.has(K(cq + oq + dq, cr + or + dr))) return false
-    }
-    return true
-  }
-
-  const placedBlocks = []
-  for (const block of blocks.sort((a, b) => b.n - a.n)) {
-    let oq = 0, or = 0, found = false
-    for (or = 0; or < 600 && !found; or++) {
-      for (oq = 0; oq <= Math.max(0, fieldW - block.w); oq++) {
-        if (fits(block, oq, or)) { found = true; break }
-      }
-    }
-    for (const id of Object.keys(block.pos)) { block.pos[id].q += oq; block.pos[id].r += or }
-    for (const [cq, cr] of block.cells) global.add(K(cq + oq, cr + or))
-    placedBlocks.push({ block, oq, or })
-  }
-
-  // ── branch titles: placed in PIXEL space, centred on the cluster's real
-  //    on-screen footprint. A branch lays out as a serpentine chain and its
-  //    title renders wide (uppercase + 0.35em tracking → ~200-250px), far
-  //    wider than the lattice cells; reasoning in cells alone let a long title
-  //    drift off its cluster. So: measure the cluster's screen box, hang the
-  //    title just above it (then below / right / left) centred on that box,
-  //    and reserve the lattice cells the title's rectangle actually covers so
-  //    nothing else packs under it. Positions are stored as final screen px. ──
-  const ROW_PX = GY * SQRT3_2                 // screen height of one lattice row
-  const LABEL_H = 22                          // rendered label height (px)
-  const CHAR_PX = 12.6                         // ~13px mono + 0.35em tracking, uppercase
-  const GAP = 26                              // clearance between title and cluster
-  // lattice cells a screen-space rectangle covers (y is screen-down; unflip for
-  // pixelToAxial, which expects the tree's +y-up pixel space).
-  const rectCells = (sx, sy, w, h) => {
-    const out = []
-    for (let x = sx; x <= sx + w + 1e-6; x += GX / 2)
-      for (let y = sy; y <= sy + h + 1e-6; y += ROW_PX / 2) {
-        const { q, r } = pixelToAxial(x, -y)
-        out.push(K(q, r))
-      }
-    return out
-  }
-  const rectClear = (sx, sy, w, h) => rectCells(sx, sy, w, h).every((k) => !global.has(k))
-
-  const placedLabels = []
-  for (const { block, oq, or } of placedBlocks) {
-    const ov = labelOverrides[block.branch] || {}
-    const hidden = !!ov.hidden
-    if (Number.isFinite(ov.x) && Number.isFinite(ov.y)) {
-      const pinnedW = block.branch.length * CHAR_PX
-      if (!hidden) for (const k of rectCells(ov.x, ov.y, pinnedW, LABEL_H)) global.add(k)
-      placedLabels.push({ branch: block.branch, x: ov.x, y: ov.y, hidden, pinned: true })
-      continue
-    }
-
-    // cluster footprint in screen space (x right, y DOWN — nodes render at -py)
-    let sxMin = Infinity, sxMax = -Infinity, syMin = Infinity, syMax = -Infinity
-    for (const [cq, cr] of block.cells) {
-      const p = axialToPixel(cq + oq, cr + or)
-      const sx = p.x, sy = -p.y
-      sxMin = Math.min(sxMin, sx); sxMax = Math.max(sxMax, sx)
-      syMin = Math.min(syMin, sy); syMax = Math.max(syMax, sy)
-    }
-    const cx = (sxMin + sxMax) / 2, cy = (syMin + syMax) / 2
-    const w = block.branch.length * CHAR_PX
-    const half = w / 2
-
-    // candidates (top-left of the label box), best first: above the cluster,
-    // then below, then right, then left — all centred on the cluster.
-    const base = [
-      [cx - half, syMin - GAP - LABEL_H],   // above
-      [cx - half, syMax + GAP],             // below
-      [sxMax + GAP, cy - LABEL_H / 2],      // right
-      [sxMin - GAP - w, cy - LABEL_H / 2],  // left
-    ]
-    let put = base.find(([sx, sy]) => rectClear(sx, sy, w, LABEL_H))
-    if (!put) {
-      // nudge the "above" placement further up in row steps until it's clear —
-      // always terminates into open field above the cluster.
-      for (let k = 2; k < 40 && !put; k++) {
-        const sy = syMin - GAP - LABEL_H - k * ROW_PX
-        if (rectClear(cx - half, sy, w, LABEL_H)) put = [cx - half, sy]
-      }
-    }
-    if (!put) put = [cx - half, syMin - GAP - LABEL_H] // last resort: draw it anyway
-    if (!hidden) for (const k of rectCells(put[0], put[1], w, LABEL_H)) global.add(k)
-    placedLabels.push({ branch: block.branch, x: put[0], y: put[1], hidden, pinned: false })
-  }
-
-  // ── emit React Flow nodes/edges (axial → px, y flipped so it grows up) ────
-  const posAll = {}
-  for (const { block } of placedBlocks) Object.assign(posAll, block.pos)
-  Object.assign(posAll, pinnedPos)
-
-  const nodes = skills.filter((s) => posAll[s.id]).map((s) => {
-    const { q, r } = posAll[s.id]
-    const p = axialToPixel(q, r)
-    return {
-      id: s.id,
-      type: 'skill',
-      position: { x: p.x, y: -p.y },
-      data: { skill: s, depth: Math.min(Math.floor(r / 2), 8) },
-    }
-  })
-  for (const l of placedLabels) {
     nodes.push({
-      id: `label-${l.branch}`,
+      id: `label-${branch}`,
       type: 'branchLabel',
-      position: { x: l.x, y: l.y },
-      data: { label: l.branch, hidden: l.hidden, pinned: l.pinned },
+      position: { x: xCursor + colW / 2, y: -52 },
+      data: { label: branch, family },
       selectable: false,
       draggable: false,
     })
+
+    xCursor += colW + COL_GAP
   }
 
   const edges = []
   for (const s of skills) {
-    if (!posAll[s.id]) continue
-    for (let i = 0; i < (s.req || []).length; i++) {
-      const r = s.req[i]
-      if (!byId[r] || !posAll[r]) continue
+    if (!pos[s.id]) continue
+    for (const r of s.req || []) {
+      if (!byId[r] || !pos[r]) continue
       edges.push({
         id: `${r}->${s.id}`,
         source: r,
         target: s.id,
         type: 'arrow',
-        data: { cross: !cleanEdges.has(`${r}->${s.id}`) },
+        data: { cross: byId[r].branch !== s.branch },
       })
     }
   }
 
-  let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity
-  for (const id of Object.keys(posAll)) {
-    minQ = Math.min(minQ, posAll[id].q); maxQ = Math.max(maxQ, posAll[id].q)
-    minR = Math.min(minR, posAll[id].r); maxR = Math.max(maxR, posAll[id].r)
-  }
-  return { nodes, edges, occupied: global, bounds: { minQ, maxQ, minR, maxR } }
+  return { nodes, edges }
 }

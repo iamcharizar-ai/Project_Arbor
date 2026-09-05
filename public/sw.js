@@ -1,7 +1,5 @@
-// Minimal service worker: makes ARBOR installable as a PWA (which lets
-// Chrome persist the vault-folder permission) and caches the app shell so
-// the cached tree still opens offline. Network-first for everything.
-const CACHE = 'arbor-shell-v2'
+// Minimal service worker: installable PWA + offline app shell. Network-first.
+const CACHE = 'arbor-shell-v4'
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/'])).then(() => self.skipWaiting()))

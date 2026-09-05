@@ -1,175 +1,102 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import Atlas from './components/Atlas.jsx'
-import Realm from './components/Realm.jsx'
+import Tree from './components/Tree.jsx'
 import Panel from './components/Panel.jsx'
-import Wheel from './components/Wheel.jsx'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ClickSpark } from './components/fx.jsx'
-import AdaptationOverlay from './components/AdaptationOverlay.jsx'
 import Search from './components/Search.jsx'
-import { useTree, initVault, connectVault, authorizeVault, disconnectVault, overallStats, weekStats } from './lib/store.js'
-
-function VaultBanner({ tree }) {
-  // A bad connection (wrong folder, unreadable files) can still leave
-  // syncStatus 'ready' — surface the error with a way OUT regardless of
-  // status, instead of only ever offering "Connect"/"Re-authorize".
-  if (tree.error) {
-    return (
-      <div className="vault-banner warn">
-        <span>⚠ {tree.error}</span>
-        <button onClick={disconnectVault}>Disconnect vault</button>
-      </div>
-    )
-  }
-  if (tree.syncStatus === 'ready') return null
-  if (tree.syncStatus === 'unsupported') {
-    return (
-      <div className="vault-banner warn">
-        This browser can't sync to the vault (needs Chrome/Edge). Showing a read-only cached tree.
-      </div>
-    )
-  }
-  if (tree.syncStatus === 'need-perm') {
-    return (
-      <div className="vault-banner">
-        <span>Vault access needs to be re-granted (browser restarted).</span>
-        <div className="vault-banner-actions">
-          <button onClick={authorizeVault}>Re-authorize</button>
-          <button className="secondary" onClick={disconnectVault}>Disconnect</button>
-        </div>
-      </div>
-    )
-  }
-  return (
-    <div className="vault-banner">
-      <span>Showing the bundled snapshot. Connect the vault to sync live edits and save ticks.</span>
-      <button onClick={connectVault}>Connect vault folder</button>
-    </div>
-  )
-}
+import LogDrawer from './components/LogDrawer.jsx'
+import Toast from './components/Toast.jsx'
+import Wheel from './components/Wheel.jsx'
+import AdaptationOverlay from './components/AdaptationOverlay.jsx'
+import { ClickSpark } from './components/fx.jsx'
+import { useTree, overallStats, weekStats, streakDays } from './lib/store.js'
 
 export default function App() {
   const tree = useTree()
-  const [view, setView] = useState('atlas') // 'atlas' | realmId
   const [selected, setSelected] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
-  const [focus, setFocus] = useState(null) // { id, t } — jump target on the realm canvas
+  const [logOpen, setLogOpen] = useState(false)
+  const [focus, setFocus] = useState(null)
+  const [filter, setFilter] = useState('all')
+  const [pillar, setPillar] = useState(null)
 
-  const [transitionKey, setTransitionKey] = useState(0)
-
-  // Gate for Realm's graph mount: true once the Atlas-card→canvas layoutId
-  // morph has actually settled, so ~126+ React Flow nodes never lay out mid-
-  // resize (that race was the perceived frame-drop on opening a big realm).
-  // onLayoutAnimationComplete fires on the shared-element/FLIP spring itself
-  // (distinct from onAnimationComplete, which only tracks the opacity tween);
-  // the timeout is a safety net in case that callback never fires.
-  const [morphDone, setMorphDone] = useState(false)
-  useEffect(() => {
-    setMorphDone(false)
-    if (view === 'atlas') return
-    const t = setTimeout(() => setMorphDone(true), 600)
-    return () => clearTimeout(t)
-  }, [view])
-
-  useEffect(() => { initVault() }, [])
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Escape') { setSelected(null); setSearchOpen(false) }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearchOpen((s) => !s) }
+      if (e.key === 'Escape') { setSelected(null); setSearchOpen(false); setLogOpen(false) }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSearchOpen((s) => !s)
+        setLogOpen(false)
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+        e.preventDefault()
+        setLogOpen((s) => !s)
+        setSearchOpen(false)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // Framer Motion's AnimatePresence exit-completion relies on requestAnimationFrame,
-  // which pauses while the tab is hidden — if a view transition is mid-flight when
-  // that happens, the outgoing view can strand at opacity:0 forever, even after
-  // refocus. Detect exactly that symptom on refocus and force a clean remount.
-  useEffect(() => {
-    const onVisibility = () => {
-      if (document.visibilityState !== 'visible') return
-      const stuck = document.querySelector('.view-container')
-      if (stuck && getComputedStyle(stuck).opacity === '0') setTransitionKey((k) => k + 1)
-    }
-    document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
-  }, [])
-
-  // search result / quest card → open the realm, select + center the node
   const goTo = useCallback((skill) => {
     setSearchOpen(false)
-    setView(skill.realm)
+    setLogOpen(false)
     setSelected(skill)
     setFocus({ id: skill.id, t: Date.now() })
   }, [])
 
   const stats = overallStats(tree)
   const week = weekStats(tree)
+  const streak = streakDays(tree)
   const vitality = stats.max ? stats.pts / stats.max : 0
-  const realm = tree.realms.find((r) => r.id === view)
-
-  if (!tree.loaded) {
-    return (
-      <div className="app loading">
-        <Wheel turns={120} size={90} className="loading-wheel" />
-        <p className="loading-text">the wheel turns…</p>
-      </div>
-    )
-  }
 
   return (
-    <div className="app" style={{ '--realm-hue': realm ? realm.hue : 252 }}>
+    <div className="app">
       <ClickSpark />
       <AdaptationOverlay />
-      <header className="topbar">
-        <button className="brand" onClick={() => { setView('atlas'); setSelected(null) }}>
-          <Wheel turns={stats.pts / 10} size={18} className="brand-wheel" pulse={tree.pulse} />
-          ARBOR
+      <aside className="rail">
+        <button className="brand rail-brand" onClick={() => { setSelected(null); setFilter('all'); setPillar(null) }} title="ARBOR">
+          <Wheel turns={stats.pts / 10} size={28} className="brand-wheel" pulse={tree.pulse} />
+          <span>ARBOR</span>
         </button>
-        <span className="app-version" title={`ARBOR v${__APP_VERSION__}`}>v{__APP_VERSION__}</span>
-        {realm && (
-          <nav className="crumbs">
-            <span className="crumb-sep">/</span>
-            <span className="crumb">{realm.name}</span>
-          </nav>
-        )}
-        <div className="top-right">
-          <button className="search-btn" onClick={() => setSearchOpen(true)} title="Find a skill">
-            ⌕ <kbd>Ctrl K</kbd>
+        <nav className="rail-nav">
+          <button type="button" className={logOpen ? 'on' : ''} onClick={() => setLogOpen(true)} title="Log a PR (Ctrl L)">
+            <em>✎</em>
+            <span>Log PR</span>
           </button>
-          <span className={`sync-dot ${tree.syncStatus === 'ready' ? 'live' : 'off'}`} title="Vault sync status">
-            {tree.pending > 0 ? '⇅ syncing' : tree.syncStatus === 'ready' ? '● vault' : '○ offline'}
-          </span>
-          {tree.syncStatus === 'ready' && !tree.error && (
-            <button className="vault-disconnect-btn" onClick={disconnectVault} title="Disconnect this vault folder">
-              disconnect
-            </button>
-          )}
-          <div className="vitality" title={`${stats.pts} / ${stats.max} growth points · lifetime ${(vitality * 100).toFixed(1)}%`}>
-            <span className="vitality-num">⚙ {stats.pts}</span>
-            {week.ticks > 0 && <span className="vitality-week">+{week.ticks} this wk</span>}
-          </div>
+          <button type="button" className={searchOpen ? 'on' : ''} onClick={() => setSearchOpen(true)} title="Find a skill (Ctrl K)">
+            <em>⌕</em>
+            <span>Search</span>
+          </button>
+        </nav>
+        <div className="rail-stats" title={`${stats.pts} / ${stats.max} XP · lifetime ${(vitality * 100).toFixed(1)}%`}>
+          <span className="vitality-num">⚙ {stats.pts}</span>
+          <span className="vitality-meta">{(vitality * 100).toFixed(1)}%</span>
+          {streak > 0 && <span className="vitality-streak">{streak}d</span>}
+          {week.ticks > 0 && <span className="vitality-week">+{week.ticks}</span>}
         </div>
-      </header>
+      </aside>
 
-      <VaultBanner tree={tree} />
+      <div className="view-container">
+        <Tree
+          onSelect={setSelected}
+          selectedId={selected?.id}
+          focus={focus}
+          filter={filter}
+          onFilter={setFilter}
+          pillar={pillar}
+          onPillar={setPillar}
+        />
+      </div>
 
-      <AnimatePresence mode="wait" key={transitionKey}>
-        {view === 'atlas' ? (
-          <motion.div key="atlas" className="view-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}>
-            <Atlas onOpen={(id) => setView(id)} onFocus={goTo} />
-          </motion.div>
-        ) : (
-          <motion.div key="realm" className="view-container" layoutId={`realm-${view}`} initial={{ opacity: 0, borderRadius: 24 }} animate={{ opacity: 1, borderRadius: 0 }} exit={{ opacity: 0 }} transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} onLayoutAnimationComplete={() => setMorphDone(true)}>
-            <Realm key={view} realmId={view} onSelect={setSelected} selectedId={selected?.id} focus={focus} graphReady={morphDone} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {selected && <Panel skill={selected} onClose={() => setSelected(null)} />}
-      </AnimatePresence>
+      {selected && (
+        <Panel
+          skill={selected}
+          onClose={() => setSelected(null)}
+          onFocus={goTo}
+        />
+      )}
       <Search open={searchOpen} onClose={() => setSearchOpen(false)} onPick={goTo} />
+      <LogDrawer open={logOpen} onClose={() => setLogOpen(false)} onPick={goTo} />
+      <Toast />
     </div>
   )
 }

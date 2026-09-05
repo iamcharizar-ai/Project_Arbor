@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTree, statusOf, STATUS_LABEL } from '../lib/store.js'
 
-// Ctrl+K command palette over all skills — subsequence fuzzy match, keyboard
-// driven. Picking a result jumps to the node on its realm canvas.
 function score(query, text) {
   const q = query.toLowerCase()
   const t = text.toLowerCase()
@@ -31,20 +29,15 @@ export default function Search({ open, onClose, onPick }) {
     }
   }, [open])
 
-  const realmName = useMemo(
-    () => Object.fromEntries(tree.realms.map((r) => [r.id, r.name])),
-    [tree.realms],
-  )
-
   const results = useMemo(() => {
     if (!q.trim()) return []
     return tree.skills
-      .map((k) => ({ k, s: score(q, `${k.name} ${k.branch} ${realmName[k.realm] || ''}`) }))
+      .map((k) => ({ k, s: score(q, `${k.name} ${k.branch}`) }))
       .filter((x) => x.s >= 0)
       .sort((a, b) => b.s - a.s)
       .slice(0, 12)
       .map((x) => x.k)
-  }, [q, tree.skills, realmName])
+  }, [q, tree.skills])
 
   useEffect(() => setSel(0), [results.length, q])
 
@@ -81,7 +74,7 @@ export default function Search({ open, onClose, onPick }) {
                   >
                     <span className="search-icon">{k.icon || '◆'}</span>
                     <span className="search-name">{k.name}</span>
-                    <span className="search-where">{realmName[k.realm] || k.realm} · {k.branch}</span>
+                    <span className="search-where">{k.branch}</span>
                     <span className={`search-status ${st}`}>{STATUS_LABEL[st]}</span>
                   </button>
                 </li>
@@ -89,7 +82,7 @@ export default function Search({ open, onClose, onPick }) {
             })}
           </ul>
         )}
-        {q.trim() && results.length === 0 && <p className="search-empty">nothing matches — still sealed in the void</p>}
+        {q.trim() && results.length === 0 && <p className="search-empty">nothing matches</p>}
       </div>
     </div>
   )
