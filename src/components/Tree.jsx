@@ -71,11 +71,19 @@ const EDGE_COLOR = {
   mastered: 'rgba(184, 233, 134, 0.85)',
 }
 
+const PILLARS = [
+  { id: 'Horizontal Push', label: 'H. Push', branches: ['Horizontal Push'] },
+  { id: 'Vertical Push', label: 'V. Push', branches: ['Vertical Push'] },
+  { id: 'Horizontal Pull', label: 'H. Pull', branches: ['Horizontal Pull'] },
+  { id: 'Vertical Pull', label: 'V. Pull', branches: ['Vertical Pull'] },
+  { id: 'Core', label: 'Core', branches: ['Core'] },
+  { id: 'Legs', label: 'Legs', branches: ['Legs'] },
+  { id: 'Flexibility', label: 'Mobility', branches: ['Flexibility', 'Mobility Foundations', 'Arm Balances', 'Yoga Holds'] },
+  { id: 'Flips & Twists', label: 'Movement', branches: ['Flips & Twists', 'Acrobatics Foundations', 'Kicks', 'Breaking', 'Dance'] },
+]
+
 const FILTERS = [
   { id: 'all', label: 'all' },
-  { id: 'cal', label: 'push · pull · core · legs' },
-  { id: 'mob', label: 'mobility' },
-  { id: 'mov', label: 'movement' },
   { id: 'next', label: 'next' },
   { id: 'training', label: 'in progress' },
   { id: 'mastered', label: 'mastered' },
@@ -85,7 +93,7 @@ function lodOf(zoom) {
   return zoom < 0.28 ? 2 : zoom < 0.52 ? 1 : 0
 }
 
-function TreeFlow({ onSelect, selectedId, filter, focus }) {
+function TreeFlow({ onSelect, selectedId, filter, focus, pillar }) {
   const tree = useTree()
   const { fitView, setCenter } = useReactFlow()
   const nodesInitialized = useNodesInitialized()
@@ -107,6 +115,17 @@ function TreeFlow({ onSelect, selectedId, filter, focus }) {
     const n = baseNodes.find((x) => x.id === focus.id)
     if (n) setCenter(n.position.x + HALF, n.position.y + HALF, { zoom: 1.05, duration: 450 })
   }, [focus, nodesInitialized, baseNodes, setCenter])
+
+  useEffect(() => {
+    if (!pillar || !nodesInitialized) return
+    const spec = PILLARS.find((p) => p.id === pillar)
+    const wanted = new Set(spec?.branches || [pillar])
+    const ids = new Set(
+      tree.skills.filter((s) => wanted.has(s.branch)).map((s) => s.id),
+    )
+    const nodes = baseNodes.filter((n) => ids.has(n.id))
+    if (nodes.length) fitView({ nodes, padding: 0.2, maxZoom: 0.95, duration: 400 })
+  }, [pillar, nodesInitialized, baseNodes, tree.skills, fitView])
 
   const frontierSet = useMemo(
     () => (filter === 'next' ? new Set(frontierSkills(tree).map((k) => k.id)) : null),
@@ -204,14 +223,24 @@ function TreeFlow({ onSelect, selectedId, filter, focus }) {
   )
 }
 
-export default function Tree({ onSelect, selectedId, focus, filter, onFilter }) {
+export default function Tree({ onSelect, selectedId, focus, filter, onFilter, pillar, onPillar }) {
   return (
     <div className="realm-canvas">
       <ReactFlowProvider>
-        <TreeFlow onSelect={onSelect} selectedId={selectedId} filter={filter} focus={focus} />
+        <TreeFlow onSelect={onSelect} selectedId={selectedId} filter={filter} focus={focus} pillar={pillar} />
       </ReactFlowProvider>
       <div className="realm-hud">
         <div className="realm-filters">
+          {PILLARS.map((p) => (
+            <button
+              key={p.id}
+              className={`realm-filter ${pillar === p.id ? 'on' : ''}`}
+              onClick={() => onPillar(pillar === p.id ? null : p.id)}
+            >
+              {p.label}
+            </button>
+          ))}
+          <span className="filter-gap" />
           {FILTERS.map((f) => (
             <button
               key={f.id}

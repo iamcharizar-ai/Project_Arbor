@@ -16,6 +16,7 @@ export default function App() {
   const [logOpen, setLogOpen] = useState(false)
   const [focus, setFocus] = useState(null)
   const [filter, setFilter] = useState('all')
+  const [pillar, setPillar] = useState(null)
 
   useEffect(() => {
     const onKey = (e) => {
@@ -52,7 +53,7 @@ export default function App() {
       <ClickSpark />
       <AdaptationOverlay />
       <aside className="rail">
-        <button className="brand rail-brand" onClick={() => { setSelected(null); setFilter('all') }} title="ARBOR">
+        <button className="brand rail-brand" onClick={() => { setSelected(null); setFilter('all'); setPillar(null) }} title="ARBOR">
           <Wheel turns={stats.pts / 10} size={28} className="brand-wheel" pulse={tree.pulse} />
           <span>ARBOR</span>
         </button>
@@ -81,6 +82,8 @@ export default function App() {
           focus={focus}
           filter={filter}
           onFilter={setFilter}
+          pillar={pillar}
+          onPillar={setPillar}
         />
       </div>
 

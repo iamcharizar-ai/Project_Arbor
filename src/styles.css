@@ -380,7 +380,8 @@ html, body, #root {
 /* realm filters */
 /* wraps because edit mode adds four more buttons to this row — on a narrow
    window the unwrapped line ran off the right edge */
-.realm-filters { display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; max-width: min(720px, calc(100vw - 160px)); }
+.realm-filters { display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; max-width: min(920px, calc(100vw - 160px)); }
+.filter-gap { width: 8px; }
 .realm-filter {
   background: rgba(20,20,20,0.85); border: 1px solid #333;
   color: var(--text-dim); font-family: var(--mono); font-size: 10px; font-weight: 700;
