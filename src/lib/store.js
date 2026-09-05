@@ -1,167 +1,92 @@
 import { useSyncExternalStore } from 'react'
-import * as vault from './vaultSync.js'
 import { BUNDLED } from './bundledTree.js'
 
-// ── vault-backed store, bundled-tree base ──────────────────────────────────
-// The tree ALWAYS renders: realms + skills come from a build-time snapshot
-// (bundledTree.js, mirrored from the vault into data/). When the vault is
-// connected via the File System Access API (vaultSync.js) it OVERLAYS live
-// realms/skills/progress on top of that base — so a fresh Vercel load or a
-// browser that forgot the folder handle still shows the full tree instead of
-// an empty shell. localStorage persists progress ticks between sessions.
-//
-// Progress precedence: vault (if connected) → localStorage → bundled seed.
+// Local-first store. Progress + the PR log live in localStorage so the app
+// works offline with no vault folder. A v3 cache is migrated on first load.
 
-const CACHE_KEY = 'arbor-tree-cache-v3'
+const STORAGE_KEY = 'arbor-progress-v4'
+const LEGACY_KEY = 'arbor-tree-cache-v3'
 
-// realms where a "mastered" is a perishable physical fact, not a certificate
-export const PHYSICAL_REALMS = new Set(['cal', 'mob', 'mov', 'aes', 'dex'])
+export const STATUS_LABEL = {
+  locked: 'Locked',
+  unlocked: 'Available',
+  inprogress: 'Training',
+  mastered: 'Mastered',
+}
+export const STATUS_DESC = {
+  locked: 'locked — prerequisites not yet trained',
+  unlocked: 'available — entry criterion hit',
+  inprogress: 'training — building the PR',
+  mastered: 'mastered — the target, hit',
+}
+const RANK = { locked: 0, unlocked: 1, inprogress: 2, mastered: 3 }
+export const POINTS = { locked: 0, unlocked: 10, inprogress: 25, mastered: 60 }
+
+const ADAPT_GRACE_MS = 60 * 60 * 1000
+
+let bursts = {}
+export function burstOf(id) { return bursts[id] || 0 }
+
+let toast = null
+const toastListeners = new Set()
+export function subscribeToast(l) { toastListeners.add(l); return () => toastListeners.delete(l) }
+export function getToast() { return toast }
+export function useToast() { return useSyncExternalStore(subscribeToast, getToast) }
+function pushToast(next) {
+  toast = next
+  toastListeners.forEach((l) => l())
+}
 
 let state = {
-  loaded: false,
-  error: null,
-  fileErrors: [], // per-file read problems (one broken JSON ≠ dead tree)
-  syncStatus: vault.supported() ? 'disconnected' : 'unsupported', // disconnected | need-perm | ready | unsupported
-  realms: BUNDLED.realms,
+  loaded: true,
+  families: BUNDLED.families,
   skills: BUNDLED.skills,
-  progress: BUNDLED.progress,
-  labels: BUNDLED.labels, // realmId -> { [branch]: { x, y, hidden } } branch-title overrides
-  season: null, // optional System/arbor/season.json: { name, ends, ids: [] }
-  logLines: [], // parsed tail of progress-log.md (the momentum layer)
-  pending: 0,
-  pulse: { n: 0, status: null }, // one-shot signal: bumped on a rank-up so the wheel spins + flashes the new tier's colour
+  progress: { ...BUNDLED.progress },
+  logLines: [],
+  pulse: { n: 0, status: null },
 }
-let handle = null
-const listeners = new Set()
 
+const listeners = new Set()
 function emit() { listeners.forEach((l) => l()) }
 export function subscribe(l) { listeners.add(l); return () => listeners.delete(l) }
 export function getState() { return state }
 export function useTree() { return useSyncExternalStore(subscribe, getState) }
 
-// Only progress is cached — realms/skills always come from the bundle (or the
-// vault), so a redeployed/edited tree is never masked by a stale cached copy.
-function cache() {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ progress: state.progress })) } catch { /* quota/private mode */ }
-}
-
-function loadCache() {
+function loadPersisted() {
   try {
-    const c = localStorage.getItem(CACHE_KEY)
-    return c ? JSON.parse(c) : null
-  } catch { return null }
-}
-
-export async function initVault() {
-  // Base layer: bundled tree + (bundled seed overlaid by) any cached progress.
-  const c = loadCache()
-  state = { ...state, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
-
-  const { handle: h, status } = await vault.loadSavedHandle()
-  handle = h
-  if (status === 'ready') {
-    await pullTree() // live vault overlays the base
-  } else {
-    state = { ...state, loaded: true, syncStatus: status }
-    emit()
-  }
-  startAutoRefresh()
-}
-
-async function pullTree() {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch { /* private mode */ }
   try {
-    const d = await vault.readTree(handle)
-    const fatal = d.errors.length > 0 && d.skills.length === 0
+    const legacy = localStorage.getItem(LEGACY_KEY)
+    if (legacy) {
+      const c = JSON.parse(legacy)
+      return { progress: c.progress || {}, logLines: [] }
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      progress: state.progress,
+      logLines: state.logLines.slice(-400),
+    }))
+  } catch { /* quota */ }
+}
+
+export function initStore() {
+  const saved = loadPersisted()
+  if (saved) {
     state = {
       ...state,
-      loaded: true,
-      syncStatus: 'ready',
-      error: fatal ? 'Could not read the vault folder — ' + d.errors[0] : null,
-      fileErrors: fatal ? [] : d.errors,
-      realms: d.realms,
-      skills: d.skills,
-      progress: d.progress,
-      labels: d.labels || {},
-      season: d.season,
-      logLines: parseLog(d.log),
+      progress: { ...BUNDLED.progress, ...(saved.progress || {}) },
+      logLines: Array.isArray(saved.logLines) ? saved.logLines : [],
     }
-    if (!fatal) cache()
-    else {
-      // vault unreadable → keep the bundled tree visible, overlay cached progress
-      const c = loadCache()
-      state = { ...state, realms: BUNDLED.realms, skills: BUNDLED.skills, labels: BUNDLED.labels, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
-    }
-  } catch (e) {
-    const c = loadCache()
-    state = { ...state, loaded: true, error: 'Could not read the vault folder — ' + (e?.message || e), realms: BUNDLED.realms, skills: BUNDLED.skills, labels: BUNDLED.labels, progress: { ...BUNDLED.progress, ...(c?.progress || {}) } }
   }
   emit()
 }
-
-export async function connectVault() {
-  try {
-    handle = await vault.connect()
-    await pullTree()
-  } catch {
-    /* user cancelled the picker */
-  }
-}
-
-export async function authorizeVault() {
-  const { handle: h } = await vault.loadSavedHandle()
-  handle = h
-  if (handle && (await vault.authorize(handle))) await pullTree()
-}
-
-export async function disconnectVault() {
-  await vault.disconnect()
-  handle = null
-  // Full reset, not just the status flag — otherwise a stale error banner (or
-  // partially-loaded live data) from a bad connection lingers after
-  // disconnecting. Falls back to the same bundled+cached-progress base
-  // initVault starts from, so the app is immediately usable again.
-  const c = loadCache()
-  state = {
-    ...state,
-    syncStatus: 'disconnected',
-    error: null,
-    fileErrors: [],
-    realms: BUNDLED.realms,
-    skills: BUNDLED.skills,
-    labels: BUNDLED.labels,
-    progress: { ...BUNDLED.progress, ...(c?.progress || {}) },
-    season: null,
-    logLines: [],
-  }
-  emit()
-}
-
-// Re-read the vault on window focus + a slow poll, so agent edits to
-// skills/*.json and progress.json show up without a manual reload. Skipped
-// while a local change is still being flushed (never clobber a pending tick).
-let refreshTimer = null
-function startAutoRefresh() {
-  if (refreshTimer) return
-  const refresh = () => {
-    if (!handle || state.syncStatus !== 'ready') return
-    if (document.visibilityState !== 'visible') return
-    if (state.pending > 0 || Object.keys(flushTimers).length > 0) return
-    pullTree()
-  }
-  window.addEventListener('focus', refresh)
-  refreshTimer = setInterval(refresh, 45000)
-}
-
-// ── status derivation (Mahoraga vocabulary, stable underlying keys) ──────
-export const STATUS_LABEL = { locked: 'Sealed', unlocked: 'Awakened', inprogress: 'Adapting', mastered: 'Adapted' }
-export const STATUS_DESC = {
-  locked: 'sealed — not yet begun',
-  unlocked: 'awakened — entry criterion hit',
-  inprogress: 'adapting — building volume',
-  mastered: 'adapted — the dedicated target, hit',
-}
-const RANK = { locked: 0, unlocked: 1, inprogress: 2, mastered: 3 }
-export const POINTS = { locked: 0, unlocked: 10, inprogress: 25, mastered: 60 }
 
 export function rec(id) { return state.progress[id] || {} }
 export function weightOf(skill) { return skill.w || 1 }
@@ -185,18 +110,16 @@ export function valueOf(skill) {
   return skill.unit ? (r.cur ?? skill.cur ?? 0) : (r.lvl ?? skill.lvl ?? 0)
 }
 
-// ── staleness (R3): asOf dates finally mean something ────────────────────
 export function staleInfo(skill, progress = state.progress) {
   const r = progress[skill.id] || {}
-  if (!r.asOf) return null // never ticked in-app — unknown, not stale
+  if (!r.asOf) return null
   const days = Math.floor((Date.now() - new Date(r.asOf).getTime()) / 86400000)
   const st = statusOf(skill, progress)
   if ((st === 'inprogress' || st === 'unlocked') && days > 45) return { kind: 'stale', days }
-  if (st === 'mastered' && PHYSICAL_REALMS.has(skill.realm) && days > 90) return { kind: 'reverify', days }
+  if (st === 'mastered' && days > 90) return { kind: 'reverify', days }
   return null
 }
 
-// ── frontier (R2): what is actionable right now ───────────────────────────
 export function frontierSkills(s = state) {
   const byId = Object.fromEntries(s.skills.map((k) => [k.id, k]))
   return s.skills.filter((k) => {
@@ -211,7 +134,6 @@ export function frontierSkills(s = state) {
   })
 }
 
-// ── daily quest (R3): today's adaptations, deterministic per day ──────────
 function mulberry32(a) {
   return function () {
     a |= 0; a = (a + 0x6d2b79f5) | 0
@@ -231,12 +153,12 @@ export function dailyQuest(s = state) {
     .map((k) => ({ k, w: (staleInfo(k, s.progress) ? 2 : 1) + rand() }))
     .sort((a, b) => b.w - a.w)
   const picks = []
-  const realmsSeen = new Set()
+  const seen = new Set()
   for (const { k } of scored) {
     if (picks.length >= 3) break
-    if (realmsSeen.has(k.realm) && scored.length > 6) continue
+    if (seen.has(k.family) && scored.length > 6) continue
     picks.push(k)
-    realmsSeen.add(k.realm)
+    seen.add(k.family)
   }
   for (const { k } of scored) {
     if (picks.length >= 3) break
@@ -245,105 +167,74 @@ export function dailyQuest(s = state) {
   return picks
 }
 
-// ── momentum layer (R3): parse the progress log tail ──────────────────────
-const LOG_RE = /^- (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) · (\S+) · (.+?) · (.+)$/
-const CROSS_RE = /(locked|unlocked|inprogress|mastered) → (locked|unlocked|inprogress|mastered)/
-
-export function parseLog(text) {
-  if (!text) return []
-  const out = []
-  for (const line of text.split('\n')) {
-    const m = line.match(LOG_RE)
-    if (!m) continue
-    const cross = m[5].match(CROSS_RE)
-    out.push({
-      date: m[1], time: m[2], id: m[3], name: m[4], detail: m[5],
-      up: cross ? RANK[cross[2]] > RANK[cross[1]] : false,
-      down: cross ? RANK[cross[2]] < RANK[cross[1]] : false,
-    })
-  }
-  return out
-}
-
 export function weekStats(s = state) {
   const cutoff = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10)
-  let ticks = 0, ups = 0, downs = 0
+  let ticks = 0, ups = 0
   for (const l of s.logLines) {
     if (l.date < cutoff) continue
     ticks++
     if (l.up) ups++
-    if (l.down) downs++
   }
-  return { ticks, ups, downs }
+  return { ticks, ups }
 }
 
-export function recentEvents(s = state, n = 6) {
-  return s.logLines.slice(-n).reverse()
+export function todayLog(s = state) {
+  const day = new Date().toISOString().slice(0, 10)
+  return s.logLines.filter((l) => l.date === day).reverse()
 }
 
-// ── writes: optimistic + debounced vault sync + adaptation mechanic ───────
-// A regression only "counts" (and can later earn a ⚙) if it stood for at
-// least this long — quick reversals are treated as mis-click corrections.
-const ADAPT_GRACE_MS = 60 * 60 * 1000
+export function recentSkills(s = state, n = 8) {
+  const seen = new Set()
+  const out = []
+  for (let i = s.logLines.length - 1; i >= 0 && out.length < n; i--) {
+    const id = s.logLines[i].id
+    if (seen.has(id)) continue
+    seen.add(id)
+    const skill = s.skills.find((k) => k.id === id)
+    if (skill) out.push(skill)
+  }
+  return out
+}
 
-let bursts = {}
-export function burstOf(id) { return bursts[id] || 0 }
-
-const flushTimers = {}
-const batchBase = {}
+export function streakDays(s = state) {
+  const days = new Set(s.logLines.map((l) => l.date))
+  if (!days.size) return 0
+  let streak = 0
+  const d = new Date()
+  // A tick today or yesterday can start the streak (don't break at midnight
+  // before the session is logged).
+  const today = d.toISOString().slice(0, 10)
+  const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+  if (!days.has(today) && !days.has(yest)) return 0
+  if (!days.has(today)) d.setDate(d.getDate() - 1)
+  for (;;) {
+    const key = d.toISOString().slice(0, 10)
+    if (!days.has(key)) break
+    streak++
+    d.setDate(d.getDate() - 1)
+  }
+  return streak
+}
 
 function stamp() {
   const d = new Date()
   const p = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
-}
-
-async function flush(skill) {
-  delete flushTimers[skill.id]
-  const base = batchBase[skill.id]
-  delete batchBase[skill.id]
-  const r = rec(skill.id)
-  const newVal = skill.unit ? (r.cur ?? skill.cur ?? 0) : (r.lvl ?? skill.lvl ?? 0)
-  const newStatus = statusOf(skill)
-  let line = null
-  if (!base || base.val !== newVal) {
-    const unitStr = skill.unit || 'tier'
-    const fromVal = base ? base.val : '?'
-    const statusPart = base && base.status !== newStatus ? ` · ${base.status} → ${newStatus}` : ` · ${newStatus}`
-    const adaptPart = base && (r.adapt || 0) > (base.adapt || 0) ? ` · ⚙ adapted ×${r.adapt}` : ''
-    line = `- ${stamp()} · ${skill.id} · ${skill.name} · ${fromVal} → ${newVal} ${unitStr}${statusPart}${adaptPart}`
+  return {
+    date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
+    time: `${p(d.getHours())}:${p(d.getMinutes())}`,
   }
-  cache()
-  if (!handle || state.syncStatus !== 'ready') return
-  state = { ...state, pending: state.pending + 1 }
-  emit()
-  try {
-    await vault.writeProgress(handle, skill.id, r, line)
-    state = { ...state, pending: Math.max(0, state.pending - 1) }
-    if (line) {
-      // reflect the new log line locally so the momentum strip stays live
-      state = { ...state, logLines: [...state.logLines, ...parseLog(line)] }
-    }
-  } catch (e) {
-    state = { ...state, pending: Math.max(0, state.pending - 1), error: 'sync failed — change kept locally (' + (e?.message || e) + ')' }
-  }
-  emit()
 }
 
 export function setValue(skill, value) {
   const before = statusOf(skill)
-  if (!(skill.id in batchBase)) batchBase[skill.id] = { val: valueOf(skill), status: before, adapt: rec(skill.id).adapt || 0 }
+  const fromVal = valueOf(skill)
   const r = { ...rec(skill.id), asOf: new Date().toISOString().slice(0, 10) }
   if (skill.unit) r.cur = Math.max(0, value)
   else r.lvl = Math.max(0, Math.min(3, value))
   state = { ...state, progress: { ...state.progress, [skill.id]: r } }
   const after = statusOf(skill)
+  const newVal = skill.unit ? r.cur : r.lvl
 
-  // Mahoraga mechanic: the wheel remembers. Fall below a rank you once held,
-  // then climb back — that skill earns a permanent adaptation mark (⚙).
-  // Grace window: a fall must STAND for a while before the climb-back counts.
-  // Undoing a mis-click (click → unclick → click) is a correction, not a
-  // failure — no ⚙ for that.
   const afterRank = RANK[after]
   const prevMax = r.maxRank || 0
   if (afterRank < prevMax) {
@@ -354,197 +245,43 @@ export function setValue(skill, value) {
     delete r.fellAt
   }
   r.maxRank = Math.max(prevMax, afterRank)
+  state = { ...state, progress: { ...state.progress, [skill.id]: r } }
+
+  if (fromVal !== newVal) {
+    const { date, time } = stamp()
+    const line = {
+      date, time, id: skill.id, name: skill.name,
+      from: fromVal, to: newVal,
+      unit: skill.unit || 'tier',
+      status: after,
+      up: RANK[after] > RANK[before],
+    }
+    state = { ...state, logLines: [...state.logLines, line] }
+    const unit = skill.unit || 'tier'
+    const msg = line.up
+      ? `${skill.name} → ${STATUS_LABEL[after]}`
+      : `${skill.name}  ${fromVal} → ${newVal} ${unit}`
+    pushToast({ id: Date.now(), msg, status: after, up: line.up })
+  }
 
   if (RANK[after] > RANK[before]) {
     bursts = { ...bursts, [skill.id]: Date.now() }
-    setTimeout(() => { bursts = { ...bursts }; delete bursts[skill.id]; emit() }, 1400)
-    // signal the wheel to spin + flash the new tier's colour (one-shot),
-    // and carry skill identity so the full-screen adaptation moment can
-    // name the skill without a separate lookup
+    setTimeout(() => { bursts = { ...bursts }; delete bursts[skill.id]; emit() }, 900)
     state = { ...state, pulse: { n: (state.pulse?.n || 0) + 1, status: after, skillId: skill.id, skillName: skill.name } }
   }
-  clearTimeout(flushTimers[skill.id])
-  flushTimers[skill.id] = setTimeout(() => flush(skill), 900)
+
+  persist()
   emit()
 }
 
-// ── edit mode: skill-definition writes (create / move / re-link) ──────────
-// Optimistic-local first (immediate re-layout), then the vault write in the
-// background — kept locally on failure, surfaced through state.error, exactly
-// like a progress tick. pushSkillWrite reuses state.pending so the 45s auto-
-// refresh poll won't clobber an in-flight definition write.
-function slugify(name) {
-  return String(name).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'skill'
-}
-
-function uniqueId(base) {
-  const taken = new Set(state.skills.map((s) => s.id))
-  if (!taken.has(base)) return base
-  let i = 2
-  while (taken.has(`${base}-${i}`)) i++
-  return `${base}-${i}`
-}
-
-// Every definition write goes through here so the pending counter (and so the
-// auto-refresh guard + the ⇅ indicator) covers creates, moves, links, deletes
-// and label edits identically. `run` returns the vaultSync promise.
-async function pushVaultWrite(run) {
-  if (!handle || state.syncStatus !== 'ready') return
-  state = { ...state, pending: state.pending + 1 }
-  emit()
-  try {
-    await run()
-    state = { ...state, pending: Math.max(0, state.pending - 1) }
-  } catch (e) {
-    state = { ...state, pending: Math.max(0, state.pending - 1), error: 'sync failed — change kept locally (' + (e?.message || e) + ')' }
+export function tickNext(skill) {
+  if (skill.unit) {
+    const val = valueOf(skill)
+    const next = (skill.t || []).find((th) => val < th)
+    setValue(skill, next != null ? next : val + 1)
+    return
   }
-  emit()
-}
-
-function pushSkillWrite(realmId, skillId, patch) {
-  return pushVaultWrite(() => vault.writeSkill(handle, realmId, skillId, patch))
-}
-
-export function createSkill(realmId, { name, branch, icon, req = [], pos }) {
-  const id = uniqueId(slugify(name))
-  const def = { id, branch, name, icon: icon || '◆', req } // vault shape: no realm field
-  if (pos) def.pos = pos
-  state = { ...state, skills: [...state.skills, { ...def, realm: realmId }] }
-  emit()
-  pushSkillWrite(realmId, id, def)
-  return id
-}
-
-export function patchSkill(realmId, skillId, patch) {
-  state = {
-    ...state,
-    skills: state.skills.map((s) => (s.id === skillId && s.realm === realmId ? { ...s, ...patch } : s)),
-  }
-  emit()
-  pushSkillWrite(realmId, skillId, patch)
-}
-
-export function moveSkill(realmId, skillId, pos) {
-  patchSkill(realmId, skillId, { pos })
-}
-
-// Group move: every skill keeps its relative place, so the whole selection is
-// one file rewrite (and one undo-sized unit of intent) rather than N.
-// `moves` = [{ id, pos: { q, r } }]
-export function moveSkills(realmId, moves) {
-  if (!moves.length) return
-  const byId = new Map(moves.map((m) => [m.id, m.pos]))
-  state = {
-    ...state,
-    skills: state.skills.map((s) =>
-      byId.has(s.id) && s.realm === realmId ? { ...s, pos: byId.get(s.id) } : s,
-    ),
-  }
-  emit()
-  pushVaultWrite(() =>
-    vault.writeSkills(handle, realmId, moves.map((m) => ({ id: m.id, patch: { pos: m.pos } }))),
-  )
-}
-
-export function updateSkillReq(realmId, skillId, req) {
-  patchSkill(realmId, skillId, { req })
-}
-
-// Delete skills and sever every reference to them. In-realm req/xref cleanup
-// happens inside the same file rewrite (vaultSync.deleteSkills); cross-realm
-// xrefs are patched per referring realm. Progress records are deliberately
-// LEFT alone — progress.json is shared with agents and a stale key is inert,
-// whereas dropping history on a mis-click is not recoverable from the app.
-export function deleteSkills(realmId, ids) {
-  const gone = new Set(ids)
-  if (!gone.size) return
-
-  // cross-realm xrefs ("realm:id") that pointed into the deleted set
-  const xrefPatches = {} // realmId -> [{ id, patch }]
-  const strip = (s) => {
-    if (s.realm === realmId) {
-      const req = (s.req || []).filter((r) => !gone.has(r))
-      return req.length === (s.req || []).length ? s : { ...s, req }
-    }
-    const xref = (s.xref || []).filter((x) => !(x.startsWith(realmId + ':') && gone.has(x.slice(realmId.length + 1))))
-    if (xref.length === (s.xref || []).length) return s
-    ;(xrefPatches[s.realm] = xrefPatches[s.realm] || []).push({ id: s.id, patch: { xref } })
-    return { ...s, xref }
-  }
-
-  state = {
-    ...state,
-    skills: state.skills.filter((s) => !(gone.has(s.id) && s.realm === realmId)).map(strip),
-  }
-  emit()
-
-  pushVaultWrite(() => vault.deleteSkills(handle, realmId, [...gone]))
-  for (const [r, patches] of Object.entries(xrefPatches)) {
-    pushVaultWrite(() => vault.writeSkills(handle, r, patches))
-  }
-}
-
-// ── edit mode: branch titles ──────────────────────────────────────────────
-// A branch has no record of its own — it exists because skills name it. So a
-// title's position/visibility is an override keyed by branch name, stored per
-// realm; renaming one is really a rename across every skill in that branch.
-export function labelsOf(realmId, s = state) {
-  return s.labels?.[realmId] || {}
-}
-
-function writeLabels(realmId, labels, patches = []) {
-  state = { ...state, labels: { ...state.labels, [realmId]: labels } }
-  emit()
-  pushVaultWrite(() => vault.writeLabels(handle, realmId, labels, patches))
-}
-
-// patch === null removes the override entirely (title snaps back to auto)
-export function setBranchLabel(realmId, branch, patch) {
-  const cur = labelsOf(realmId)
-  const next = { ...cur }
-  if (patch === null) delete next[branch]
-  else next[branch] = { ...(cur[branch] || {}), ...patch }
-  writeLabels(realmId, next)
-}
-
-export function renameBranch(realmId, from, to) {
-  const name = String(to).trim()
-  if (!name || name === from) return
-  const patches = state.skills
-    .filter((s) => s.realm === realmId && s.branch === from)
-    .map((s) => ({ id: s.id, patch: { branch: name } }))
-  if (!patches.length) return
-
-  const cur = labelsOf(realmId)
-  const nextLabels = { ...cur }
-  if (cur[from]) {
-    // carry the override across, but don't clobber one the target already has
-    if (!nextLabels[name]) nextLabels[name] = cur[from]
-    delete nextLabels[from]
-  }
-
-  state = {
-    ...state,
-    skills: state.skills.map((s) => (s.realm === realmId && s.branch === from ? { ...s, branch: name } : s)),
-    labels: { ...state.labels, [realmId]: nextLabels },
-  }
-  emit()
-  // one rewrite: the branch rename on every member skill AND the moved override
-  pushVaultWrite(() => vault.writeLabels(handle, realmId, nextLabels, patches))
-}
-
-// ── aggregate stats (weighted, R4) ─────────────────────────────────────────
-export function realmStats(realmId, s = state) {
-  const skills = s.skills.filter((k) => k.realm === realmId)
-  const counts = { locked: 0, unlocked: 0, inprogress: 0, mastered: 0 }
-  let pts = 0, max = 0
-  for (const k of skills) {
-    const st = statusOf(k, s.progress)
-    counts[st]++
-    pts += POINTS[st] * weightOf(k)
-    max += POINTS.mastered * weightOf(k)
-  }
-  return { total: skills.length, counts, pts, max: max || 1 }
+  setValue(skill, Math.min(3, valueOf(skill) + 1))
 }
 
 export function overallStats(s = state) {
@@ -559,17 +296,17 @@ export function overallStats(s = state) {
   return { total: s.skills.length, counts, pts, max: max || 1 }
 }
 
-// Season (R4): if System/arbor/season.json names a skill subset, progress is
-// measured against THAT — a reachable cycle target, not the villa.
-export function seasonStats(s = state) {
-  if (!s.season || !Array.isArray(s.season.ids) || !s.season.ids.length) return null
-  const set = new Set(s.season.ids)
-  const skills = s.skills.filter((k) => set.has(k.id))
-  if (!skills.length) return null
+export function familyStats(familyId, s = state) {
+  const skills = s.skills.filter((k) => k.family === familyId)
+  const counts = { locked: 0, unlocked: 0, inprogress: 0, mastered: 0 }
   let pts = 0, max = 0
   for (const k of skills) {
-    pts += POINTS[statusOf(k, s.progress)] * weightOf(k)
+    const st = statusOf(k, s.progress)
+    counts[st]++
+    pts += POINTS[st] * weightOf(k)
     max += POINTS.mastered * weightOf(k)
   }
-  return { name: s.season.name || 'Season', ends: s.season.ends || null, pct: pts / max, total: skills.length }
+  return { total: skills.length, counts, pts, max: max || 1 }
 }
+
+initStore()

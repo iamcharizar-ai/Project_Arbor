@@ -1,11 +1,11 @@
 {
-  "name": "ARBOR — living skill tree",
+  "name": "ARBOR — calisthenics skill tree",
   "short_name": "ARBOR",
-  "description": "The eight-handled wheel over the vault's goals. It adapts.",
+  "description": "Log PRs and grind calisthenics, mobility, and movement skill trees.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#08080c",
-  "theme_color": "#08080c",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
   "icons": [
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]

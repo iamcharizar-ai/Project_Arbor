@@ -1,56 +1,779 @@
-{ "skills": [
-{ "id": "active-flexibility-basics", "branch": "Mobility Foundations", "name": "Active Flexibility Basics", "icon": "🫀", "kind": "foundation", "req": [], "tiers": { "u": "End-range contractions understood + tried", "p": "Pulses and loaded holds in the weekly routine", "m": "Every stretch has an active component" } },
-{ "id": "shoulder-flexion", "branch": "Mobility Foundations", "name": "Shoulder Flexion", "icon": "🙆", "kind": "foundation", "req": ["active-flexibility-basics"], "tiers": { "u": "Wall slides clean", "p": "Arms overhead, ribs down, no arch", "m": "Full overhead range — handstand-line ready" } },
-{ "id": "thoracic-extension", "branch": "Mobility Foundations", "name": "Thoracic Extension", "icon": "🐪", "kind": "foundation", "req": ["active-flexibility-basics"], "tiers": { "u": "Foam-roller extensions daily", "p": "Visible upper-back extension in bridge photos", "m": "Bend comes from the T-spine, not the lower back" } },
-{ "id": "hip-rotation", "branch": "Mobility Foundations", "name": "Hip Rotation", "icon": "🔄", "kind": "foundation", "req": ["active-flexibility-basics"], "tiers": { "u": "90/90 sits comfortable both sides", "p": "Internal + external rotation drills weekly", "m": "Rotation never limits a pose" } },
-{ "id": "ankle-dorsiflexion", "branch": "Mobility Foundations", "name": "Ankle Dorsiflexion", "icon": "🦶", "kind": "foundation", "req": [], "tiers": { "u": "Knee-to-wall measured", "p": "Range increasing, squat deepening", "m": "Full-depth squat and pistol support" } },
-{ "id": "cat-cow", "branch": "Mobility Foundations", "name": "Cat / Cow", "icon": "🐈", "kind": "foundation", "req": [], "tiers": { "u": "Segmental flexion/extension through the spine", "p": "Daily warm-up, moving one vertebra at a time", "m": "Spine articulates smoothly, no flat or stuck segments" } },
-{ "id": "shoulder-mobility-drills", "branch": "Mobility Foundations", "name": "Shoulder Mobility Drills", "icon": "🙆", "kind": "foundation", "req": ["active-flexibility-basics"], "tiers": { "u": "Behind-back + prone overhead raises tried", "p": "Both in the weekly routine, range increasing", "m": "Shoulders open enough that flexion drills feel easy" } },
-{ "id": "shoulder-dislocates", "branch": "Mobility Foundations", "name": "Shoulder Dislocates", "icon": "🔄", "req": ["shoulder-mobility-drills"], "unit": "reps", "t": [10, 15, 20], "note": "Pass a band/stick overhead front-to-back; narrow the grip as range opens" },
-{ "id": "deep-squat-hold", "branch": "Mobility Foundations", "name": "Deep Squat Hold", "icon": "🧎", "req": ["ankle-dorsiflexion"], "unit": "sec", "t": [30, 60, 120], "xref": ["cal:ankle-mobility-squat"], "note": "Passive ass-to-grass hold — hips, ankles, adductors" },
-
-{ "id": "touching-toes", "branch": "Flexibility", "name": "Touching Toes", "icon": "🦶", "unit": "sec", "t": [10, 20, 30], "req": [], "note": "Standing forward fold — the hamstring baseline before loaded pike work" },
-{ "id": "plow-pose", "branch": "Flexibility", "name": "Plow Pose", "icon": "⛏️", "unit": "sec", "t": [20, 40, 60], "req": ["touching-toes"] },
-{ "id": "pigeon-stretch", "branch": "Flexibility", "name": "Pigeon Stretch", "icon": "🐦", "unit": "sec", "t": [30, 60, 90], "req": ["hip-rotation"], "note": "Glute / external-hip opener, each side" },
-{ "id": "hamstring-loaded-pike", "branch": "Flexibility", "name": "Loaded Pike", "icon": "🏋️", "kind": "bridge", "req": ["plow-pose"], "tiers": { "u": "Weighted pike stretch, light load", "p": "Jefferson curls with control", "m": "Loaded end-range feels strong, not scary" } },
-{ "id": "pike-compression-stretch", "branch": "Flexibility", "name": "Pike Compression", "icon": "🐥", "unit": "sec", "t": [10, 20, 30], "req": ["hamstring-loaded-pike"] },
-{ "id": "pancake", "branch": "Flexibility", "name": "Pancake Stretch", "icon": "🥞", "star": true, "unit": "sec", "t": [10, 20, 30], "req": ["pike-compression-stretch"], "note": "2026 goal: 30s ⭐. Unlocks press-to-handstand." },
-{ "id": "middle-split-strength", "branch": "Flexibility", "name": "Middle Split Strength", "icon": "🐴", "kind": "bridge", "req": ["pancake"], "tiers": { "u": "Horse stance 60s", "p": "Adductor active strength (side lunges, sliders)", "m": "Strength through the full straddle range" } },
-{ "id": "middle-split", "branch": "Flexibility", "name": "Middle Split", "icon": "🪓", "unit": "sec", "t": [10, 20, 30], "req": ["middle-split-strength"] },
-{ "id": "front-split-strength", "branch": "Flexibility", "name": "Front Split Strength", "icon": "🦵", "kind": "bridge", "req": ["pike-compression-stretch"], "tiers": { "u": "Hip flexor + hamstring active control drills", "p": "Sliding to near-split under control", "m": "Owns every inch of the range" } },
-{ "id": "front-split", "branch": "Flexibility", "name": "Front Split", "icon": "🁢", "unit": "sec", "t": [10, 20, 30], "req": ["front-split-strength"], "note": "= Hanumanasana" },
-{ "id": "standing-split", "branch": "Flexibility", "name": "Standing Split", "icon": "🕴️", "unit": "sec", "t": [10, 20, 30], "req": ["front-split"] },
-{ "id": "leg-behind-neck", "branch": "Flexibility", "name": "Leg Behind Neck", "icon": "🧘", "unit": "sec", "t": [3, 6, 10], "req": ["front-split"] },
-{ "id": "camel-pose", "branch": "Flexibility", "name": "Camel Pose", "icon": "🐫", "unit": "sec", "t": [15, 30, 45], "req": [] },
-{ "id": "bridge-prep", "branch": "Flexibility", "name": "Bridge Prep", "icon": "🌉", "kind": "bridge", "req": ["camel-pose"], "xref": ["cal:joint-prep-wrists"], "tiers": { "u": "Wrists, shoulders, thoracic, glutes each prepped", "p": "Tabletop bridge strong and pain-free", "m": "Push into a partial wheel with straight-ish arms" } },
-{ "id": "bridge-wheel", "branch": "Flexibility", "name": "Wheel Pose", "icon": "🎡", "unit": "sec", "t": [10, 20, 30], "req": ["bridge-prep"], "note": "Urdhva Dhanurasana — full backbend" },
-{ "id": "lotus-prep", "branch": "Flexibility", "name": "Lotus Prep", "icon": "🌱", "kind": "bridge", "req": ["hip-rotation"], "tiers": { "u": "Half lotus comfortable, knees quiet", "p": "Knee-safe entry steps drilled", "m": "Hips open enough that lotus is a hip move, not a knee move" } },
-{ "id": "lotus", "branch": "Flexibility", "name": "Lotus Pose", "icon": "🪷", "unit": "sec", "t": [30, 60, 120], "req": ["lotus-prep"] },
-
-{ "id": "wrist-loading-yoga", "branch": "Arm Balances", "name": "Wrist Loading (Yoga)", "icon": "🤲", "kind": "foundation", "req": [], "xref": ["cal:joint-prep-wrists"], "tiers": { "u": "Wrist warm-up before every arm-balance session", "p": "Full bodyweight on hands pain-free 5+ min", "m": "Wrists conditioned for daily arm balances" } },
-{ "id": "hip-compression-arm-balance", "branch": "Arm Balances", "name": "Hip Compression", "icon": "🗜️", "kind": "foundation", "req": ["wrist-loading-yoga"], "xref": ["cal:compression-foundation"], "tiers": { "u": "Knees-to-chest compression drills", "p": "Lifted compression holds (feet off floor)", "m": "Compression strong enough for firefly-family poses" } },
-{ "id": "twist-mobility", "branch": "Arm Balances", "name": "Twist Mobility", "icon": "🌪️", "kind": "foundation", "req": ["wrist-loading-yoga"], "tiers": { "u": "Seated + revolved twists daily", "p": "Deep twist with straight spine both sides", "m": "Twist range never blocks side crow family" } },
-{ "id": "one-legged-crow", "branch": "Arm Balances", "name": "One-Legged Crow", "icon": "🐦‍⬛", "unit": "sec", "t": [3, 6, 10], "req": [], "note": "Builds on mastered crow pose (Calisthenics)" },
-{ "id": "crow-exits", "branch": "Arm Balances", "name": "Crow Exits & Bails", "icon": "🪂", "kind": "bridge", "req": ["one-legged-crow"], "tiers": { "u": "Safe forward exit drilled", "p": "Side falls relaxed, no wrist panic", "m": "Falling out of any arm balance is boring" } },
-{ "id": "crane-pose", "branch": "Arm Balances", "name": "Crane Pose", "icon": "🏗️", "unit": "sec", "t": [3, 6, 10], "req": ["one-legged-crow"] },
-{ "id": "crow-to-handstand", "branch": "Arm Balances", "name": "Crow → Handstand", "icon": "🎢", "unit": "reps", "t": [1, 3, 5], "req": ["crane-pose"], "note": "Press transition — needs handstand (Calisthenics)" },
-{ "id": "side-crow", "branch": "Arm Balances", "name": "Side Crow", "icon": "🐦", "unit": "sec", "t": [5, 10, 15], "req": ["crane-pose", "twist-mobility"] },
-{ "id": "flying-pigeon", "branch": "Arm Balances", "name": "Flying Pigeon", "icon": "🕊️", "unit": "sec", "t": [3, 6, 10], "req": ["side-crow"], "note": "Eka Pada Galavasana" },
-{ "id": "grasshopper", "branch": "Arm Balances", "name": "Grasshopper Pose", "icon": "🦗", "unit": "sec", "t": [3, 6, 10], "req": ["flying-pigeon"] },
-{ "id": "firefly-pose", "branch": "Arm Balances", "name": "Firefly Pose", "icon": "🐦‍🔥", "unit": "sec", "t": [3, 6, 10], "req": ["side-crow", "hip-compression-arm-balance"] },
-{ "id": "eight-angle-pose", "branch": "Arm Balances", "name": "Eight-Angle Pose", "icon": "🐍", "unit": "sec", "t": [3, 6, 10], "req": ["side-crow"] },
-{ "id": "mayurasana", "branch": "Arm Balances", "name": "Mayurasana", "icon": "🦚", "unit": "sec", "t": [5, 10, 15], "req": ["crane-pose"] },
-{ "id": "flying-split-balance", "branch": "Arm Balances", "name": "Flying Split Arm Balance", "icon": "💫", "unit": "sec", "t": [1, 2, 3], "req": ["firefly-pose"], "note": "Eka Pada Koundinyasana — 2026 goal: 3s" },
-
-{ "id": "tree-pose", "branch": "Yoga Holds", "name": "Tree Pose", "icon": "🌳", "unit": "sec", "t": [15, 30, 60], "req": [], "note": "Vrikasana" },
-{ "id": "warrior-ii", "branch": "Yoga Holds", "name": "Warrior II", "icon": "🗡️", "unit": "sec", "t": [15, 30, 60], "req": [], "note": "Virabhadrasana II" },
-{ "id": "chair-pose", "branch": "Yoga Holds", "name": "Chair Pose", "icon": "🪑", "unit": "sec", "t": [15, 30, 60], "req": [], "note": "Utkatasana" },
-{ "id": "boat-pose", "branch": "Yoga Holds", "name": "Boat Pose", "icon": "⛵", "unit": "sec", "t": [10, 20, 40], "req": [], "note": "Navasana — no-hands core hold, distinct mechanism from L-sit" },
-{ "id": "king-dance", "branch": "Yoga Holds", "name": "King Dancer Pose", "icon": "🦩", "unit": "sec", "t": [10, 20, 30], "req": ["tree-pose"] },
-{ "id": "full-king-dancer", "branch": "Yoga Holds", "name": "Full King Dancer", "icon": "👑", "unit": "sec", "t": [5, 10, 15], "req": ["king-dance"], "note": "Both hands overhead, foot to crown" },
-{ "id": "mermaid-pose", "branch": "Yoga Holds", "name": "Mermaid Pose", "icon": "🧜‍♀️", "unit": "sec", "t": [8, 15, 20], "req": ["king-dance"] },
-{ "id": "king-pigeon", "branch": "Yoga Holds", "name": "King Pigeon", "icon": "🕊️", "unit": "sec", "t": [3, 6, 10], "req": ["mermaid-pose"] },
-{ "id": "full-king-pigeon", "branch": "Yoga Holds", "name": "Full King Pigeon", "icon": "🪽", "unit": "sec", "t": [3, 6, 10], "req": ["king-pigeon"], "note": "Foot touches head" },
-{ "id": "scorpion-pose", "branch": "Yoga Holds", "name": "Scorpion Pose", "icon": "🦂", "unit": "sec", "t": [3, 6, 10], "req": ["king-pigeon"], "note": "Needs forearm stand (Calisthenics)" },
-{ "id": "hollowback-handstand", "branch": "Yoga Holds", "name": "Hollowback Handstand", "icon": "🌙", "star": true, "unit": "sec", "t": [2, 5, 10], "req": ["scorpion-pose"], "note": "Dream tier — scorpion in a handstand" }
-] }
+{
+  "skills": [
+    {
+      "id": "active-flexibility-basics",
+      "branch": "Mobility Foundations",
+      "name": "Active Flexibility Basics",
+      "icon": "🫀",
+      "kind": "foundation",
+      "req": [],
+      "tiers": {
+        "u": "End-range contractions understood + tried",
+        "p": "Pulses and loaded holds in the weekly routine",
+        "m": "Every stretch has an active component"
+      }
+    },
+    {
+      "id": "shoulder-flexion",
+      "branch": "Mobility Foundations",
+      "name": "Shoulder Flexion",
+      "icon": "🙆",
+      "kind": "foundation",
+      "req": [
+        "active-flexibility-basics"
+      ],
+      "tiers": {
+        "u": "Wall slides clean",
+        "p": "Arms overhead, ribs down, no arch",
+        "m": "Full overhead range — handstand-line ready"
+      }
+    },
+    {
+      "id": "thoracic-extension",
+      "branch": "Mobility Foundations",
+      "name": "Thoracic Extension",
+      "icon": "🐪",
+      "kind": "foundation",
+      "req": [
+        "active-flexibility-basics"
+      ],
+      "tiers": {
+        "u": "Foam-roller extensions daily",
+        "p": "Visible upper-back extension in bridge photos",
+        "m": "Bend comes from the T-spine, not the lower back"
+      }
+    },
+    {
+      "id": "hip-rotation",
+      "branch": "Mobility Foundations",
+      "name": "Hip Rotation",
+      "icon": "🔄",
+      "kind": "foundation",
+      "req": [
+        "active-flexibility-basics"
+      ],
+      "tiers": {
+        "u": "90/90 sits comfortable both sides",
+        "p": "Internal + external rotation drills weekly",
+        "m": "Rotation never limits a pose"
+      }
+    },
+    {
+      "id": "ankle-dorsiflexion",
+      "branch": "Mobility Foundations",
+      "name": "Ankle Dorsiflexion",
+      "icon": "🦶",
+      "kind": "foundation",
+      "req": [],
+      "tiers": {
+        "u": "Knee-to-wall measured",
+        "p": "Range increasing, squat deepening",
+        "m": "Full-depth squat and pistol support"
+      }
+    },
+    {
+      "id": "cat-cow",
+      "branch": "Mobility Foundations",
+      "name": "Cat / Cow",
+      "icon": "🐈",
+      "kind": "foundation",
+      "req": [],
+      "tiers": {
+        "u": "Segmental flexion/extension through the spine",
+        "p": "Daily warm-up, moving one vertebra at a time",
+        "m": "Spine articulates smoothly, no flat or stuck segments"
+      }
+    },
+    {
+      "id": "shoulder-mobility-drills",
+      "branch": "Mobility Foundations",
+      "name": "Shoulder Mobility Drills",
+      "icon": "🙆",
+      "kind": "foundation",
+      "req": [
+        "active-flexibility-basics"
+      ],
+      "tiers": {
+        "u": "Behind-back + prone overhead raises tried",
+        "p": "Both in the weekly routine, range increasing",
+        "m": "Shoulders open enough that flexion drills feel easy"
+      }
+    },
+    {
+      "id": "shoulder-dislocates",
+      "branch": "Mobility Foundations",
+      "name": "Shoulder Dislocates",
+      "icon": "🔄",
+      "req": [
+        "shoulder-mobility-drills"
+      ],
+      "unit": "reps",
+      "t": [
+        10,
+        15,
+        20
+      ],
+      "note": "Pass a band/stick overhead front-to-back; narrow the grip as range opens"
+    },
+    {
+      "id": "deep-squat-hold",
+      "branch": "Mobility Foundations",
+      "name": "Deep Squat Hold",
+      "icon": "🧎",
+      "req": [
+        "ankle-dorsiflexion",
+        "ankle-mobility-squat"
+      ],
+      "unit": "sec",
+      "t": [
+        30,
+        60,
+        120
+      ],
+      "note": "Passive ass-to-grass hold — hips, ankles, adductors"
+    },
+    {
+      "id": "touching-toes",
+      "branch": "Flexibility",
+      "name": "Touching Toes",
+      "icon": "🦶",
+      "unit": "sec",
+      "t": [
+        10,
+        20,
+        30
+      ],
+      "req": [],
+      "note": "Standing forward fold — the hamstring baseline before loaded pike work"
+    },
+    {
+      "id": "plow-pose",
+      "branch": "Flexibility",
+      "name": "Plow Pose",
+      "icon": "⛏️",
+      "unit": "sec",
+      "t": [
+        20,
+        40,
+        60
+      ],
+      "req": [
+        "touching-toes"
+      ]
+    },
+    {
+      "id": "pigeon-stretch",
+      "branch": "Flexibility",
+      "name": "Pigeon Stretch",
+      "icon": "🐦",
+      "unit": "sec",
+      "t": [
+        30,
+        60,
+        90
+      ],
+      "req": [
+        "hip-rotation"
+      ],
+      "note": "Glute / external-hip opener, each side"
+    },
+    {
+      "id": "hamstring-loaded-pike",
+      "branch": "Flexibility",
+      "name": "Loaded Pike",
+      "icon": "🏋️",
+      "kind": "bridge",
+      "req": [
+        "plow-pose"
+      ],
+      "tiers": {
+        "u": "Weighted pike stretch, light load",
+        "p": "Jefferson curls with control",
+        "m": "Loaded end-range feels strong, not scary"
+      }
+    },
+    {
+      "id": "pike-compression-stretch",
+      "branch": "Flexibility",
+      "name": "Pike Compression",
+      "icon": "🐥",
+      "unit": "sec",
+      "t": [
+        10,
+        20,
+        30
+      ],
+      "req": [
+        "hamstring-loaded-pike"
+      ]
+    },
+    {
+      "id": "pancake",
+      "branch": "Flexibility",
+      "name": "Pancake Stretch",
+      "icon": "🥞",
+      "star": true,
+      "unit": "sec",
+      "t": [
+        10,
+        20,
+        30
+      ],
+      "req": [
+        "pike-compression-stretch"
+      ],
+      "note": "2026 goal: 30s ⭐. Unlocks press-to-handstand."
+    },
+    {
+      "id": "middle-split-strength",
+      "branch": "Flexibility",
+      "name": "Middle Split Strength",
+      "icon": "🐴",
+      "kind": "bridge",
+      "req": [
+        "pancake"
+      ],
+      "tiers": {
+        "u": "Horse stance 60s",
+        "p": "Adductor active strength (side lunges, sliders)",
+        "m": "Strength through the full straddle range"
+      }
+    },
+    {
+      "id": "middle-split",
+      "branch": "Flexibility",
+      "name": "Middle Split",
+      "icon": "🪓",
+      "unit": "sec",
+      "t": [
+        10,
+        20,
+        30
+      ],
+      "req": [
+        "middle-split-strength"
+      ]
+    },
+    {
+      "id": "front-split-strength",
+      "branch": "Flexibility",
+      "name": "Front Split Strength",
+      "icon": "🦵",
+      "kind": "bridge",
+      "req": [
+        "pike-compression-stretch"
+      ],
+      "tiers": {
+        "u": "Hip flexor + hamstring active control drills",
+        "p": "Sliding to near-split under control",
+        "m": "Owns every inch of the range"
+      }
+    },
+    {
+      "id": "front-split",
+      "branch": "Flexibility",
+      "name": "Front Split",
+      "icon": "🁢",
+      "unit": "sec",
+      "t": [
+        10,
+        20,
+        30
+      ],
+      "req": [
+        "front-split-strength"
+      ],
+      "note": "= Hanumanasana"
+    },
+    {
+      "id": "standing-split",
+      "branch": "Flexibility",
+      "name": "Standing Split",
+      "icon": "🕴️",
+      "unit": "sec",
+      "t": [
+        10,
+        20,
+        30
+      ],
+      "req": [
+        "front-split"
+      ]
+    },
+    {
+      "id": "leg-behind-neck",
+      "branch": "Flexibility",
+      "name": "Leg Behind Neck",
+      "icon": "🧘",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "front-split"
+      ]
+    },
+    {
+      "id": "camel-pose",
+      "branch": "Flexibility",
+      "name": "Camel Pose",
+      "icon": "🐫",
+      "unit": "sec",
+      "t": [
+        15,
+        30,
+        45
+      ],
+      "req": []
+    },
+    {
+      "id": "bridge-prep",
+      "branch": "Flexibility",
+      "name": "Bridge Prep",
+      "icon": "🌉",
+      "kind": "bridge",
+      "req": [
+        "camel-pose",
+        "joint-prep-wrists"
+      ],
+      "tiers": {
+        "u": "Wrists, shoulders, thoracic, glutes each prepped",
+        "p": "Tabletop bridge strong and pain-free",
+        "m": "Push into a partial wheel with straight-ish arms"
+      }
+    },
+    {
+      "id": "bridge-wheel",
+      "branch": "Flexibility",
+      "name": "Wheel Pose",
+      "icon": "🎡",
+      "unit": "sec",
+      "t": [
+        10,
+        20,
+        30
+      ],
+      "req": [
+        "bridge-prep"
+      ],
+      "note": "Urdhva Dhanurasana — full backbend"
+    },
+    {
+      "id": "lotus-prep",
+      "branch": "Flexibility",
+      "name": "Lotus Prep",
+      "icon": "🌱",
+      "kind": "bridge",
+      "req": [
+        "hip-rotation"
+      ],
+      "tiers": {
+        "u": "Half lotus comfortable, knees quiet",
+        "p": "Knee-safe entry steps drilled",
+        "m": "Hips open enough that lotus is a hip move, not a knee move"
+      }
+    },
+    {
+      "id": "lotus",
+      "branch": "Flexibility",
+      "name": "Lotus Pose",
+      "icon": "🪷",
+      "unit": "sec",
+      "t": [
+        30,
+        60,
+        120
+      ],
+      "req": [
+        "lotus-prep"
+      ]
+    },
+    {
+      "id": "wrist-loading-yoga",
+      "branch": "Arm Balances",
+      "name": "Wrist Loading (Yoga)",
+      "icon": "🤲",
+      "kind": "foundation",
+      "req": [
+        "joint-prep-wrists"
+      ],
+      "tiers": {
+        "u": "Wrist warm-up before every arm-balance session",
+        "p": "Full bodyweight on hands pain-free 5+ min",
+        "m": "Wrists conditioned for daily arm balances"
+      }
+    },
+    {
+      "id": "hip-compression-arm-balance",
+      "branch": "Arm Balances",
+      "name": "Hip Compression",
+      "icon": "🗜️",
+      "kind": "foundation",
+      "req": [
+        "wrist-loading-yoga",
+        "compression-foundation"
+      ],
+      "tiers": {
+        "u": "Knees-to-chest compression drills",
+        "p": "Lifted compression holds (feet off floor)",
+        "m": "Compression strong enough for firefly-family poses"
+      }
+    },
+    {
+      "id": "twist-mobility",
+      "branch": "Arm Balances",
+      "name": "Twist Mobility",
+      "icon": "🌪️",
+      "kind": "foundation",
+      "req": [
+        "wrist-loading-yoga"
+      ],
+      "tiers": {
+        "u": "Seated + revolved twists daily",
+        "p": "Deep twist with straight spine both sides",
+        "m": "Twist range never blocks side crow family"
+      }
+    },
+    {
+      "id": "one-legged-crow",
+      "branch": "Arm Balances",
+      "name": "One-Legged Crow",
+      "icon": "🐦‍⬛",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "crow-pose"
+      ],
+      "note": "Builds on mastered crow pose (Calisthenics)"
+    },
+    {
+      "id": "crow-exits",
+      "branch": "Arm Balances",
+      "name": "Crow Exits & Bails",
+      "icon": "🪂",
+      "kind": "bridge",
+      "req": [
+        "one-legged-crow"
+      ],
+      "tiers": {
+        "u": "Safe forward exit drilled",
+        "p": "Side falls relaxed, no wrist panic",
+        "m": "Falling out of any arm balance is boring"
+      }
+    },
+    {
+      "id": "crane-pose",
+      "branch": "Arm Balances",
+      "name": "Crane Pose",
+      "icon": "🏗️",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "one-legged-crow"
+      ]
+    },
+    {
+      "id": "crow-to-handstand",
+      "branch": "Arm Balances",
+      "name": "Crow → Handstand",
+      "icon": "🎢",
+      "unit": "reps",
+      "t": [
+        1,
+        3,
+        5
+      ],
+      "req": [
+        "crane-pose",
+        "handstand"
+      ],
+      "note": "Press transition — needs handstand (Calisthenics)"
+    },
+    {
+      "id": "side-crow",
+      "branch": "Arm Balances",
+      "name": "Side Crow",
+      "icon": "🐦",
+      "unit": "sec",
+      "t": [
+        5,
+        10,
+        15
+      ],
+      "req": [
+        "crane-pose",
+        "twist-mobility"
+      ]
+    },
+    {
+      "id": "flying-pigeon",
+      "branch": "Arm Balances",
+      "name": "Flying Pigeon",
+      "icon": "🕊️",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "side-crow"
+      ],
+      "note": "Eka Pada Galavasana"
+    },
+    {
+      "id": "grasshopper",
+      "branch": "Arm Balances",
+      "name": "Grasshopper Pose",
+      "icon": "🦗",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "flying-pigeon"
+      ]
+    },
+    {
+      "id": "firefly-pose",
+      "branch": "Arm Balances",
+      "name": "Firefly Pose",
+      "icon": "🐦‍🔥",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "side-crow",
+        "hip-compression-arm-balance"
+      ]
+    },
+    {
+      "id": "eight-angle-pose",
+      "branch": "Arm Balances",
+      "name": "Eight-Angle Pose",
+      "icon": "🐍",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "side-crow"
+      ]
+    },
+    {
+      "id": "mayurasana",
+      "branch": "Arm Balances",
+      "name": "Mayurasana",
+      "icon": "🦚",
+      "unit": "sec",
+      "t": [
+        5,
+        10,
+        15
+      ],
+      "req": [
+        "crane-pose"
+      ]
+    },
+    {
+      "id": "flying-split-balance",
+      "branch": "Arm Balances",
+      "name": "Flying Split Arm Balance",
+      "icon": "💫",
+      "unit": "sec",
+      "t": [
+        1,
+        2,
+        3
+      ],
+      "req": [
+        "firefly-pose"
+      ],
+      "note": "Eka Pada Koundinyasana — 2026 goal: 3s"
+    },
+    {
+      "id": "tree-pose",
+      "branch": "Yoga Holds",
+      "name": "Tree Pose",
+      "icon": "🌳",
+      "unit": "sec",
+      "t": [
+        15,
+        30,
+        60
+      ],
+      "req": [],
+      "note": "Vrikasana"
+    },
+    {
+      "id": "warrior-ii",
+      "branch": "Yoga Holds",
+      "name": "Warrior II",
+      "icon": "🗡️",
+      "unit": "sec",
+      "t": [
+        15,
+        30,
+        60
+      ],
+      "req": [],
+      "note": "Virabhadrasana II"
+    },
+    {
+      "id": "chair-pose",
+      "branch": "Yoga Holds",
+      "name": "Chair Pose",
+      "icon": "🪑",
+      "unit": "sec",
+      "t": [
+        15,
+        30,
+        60
+      ],
+      "req": [],
+      "note": "Utkatasana"
+    },
+    {
+      "id": "boat-pose",
+      "branch": "Yoga Holds",
+      "name": "Boat Pose",
+      "icon": "⛵",
+      "unit": "sec",
+      "t": [
+        10,
+        20,
+        40
+      ],
+      "req": [],
+      "note": "Navasana — no-hands core hold, distinct mechanism from L-sit"
+    },
+    {
+      "id": "king-dance",
+      "branch": "Yoga Holds",
+      "name": "King Dancer Pose",
+      "icon": "🦩",
+      "unit": "sec",
+      "t": [
+        10,
+        20,
+        30
+      ],
+      "req": [
+        "tree-pose"
+      ]
+    },
+    {
+      "id": "full-king-dancer",
+      "branch": "Yoga Holds",
+      "name": "Full King Dancer",
+      "icon": "👑",
+      "unit": "sec",
+      "t": [
+        5,
+        10,
+        15
+      ],
+      "req": [
+        "king-dance"
+      ],
+      "note": "Both hands overhead, foot to crown"
+    },
+    {
+      "id": "mermaid-pose",
+      "branch": "Yoga Holds",
+      "name": "Mermaid Pose",
+      "icon": "🧜‍♀️",
+      "unit": "sec",
+      "t": [
+        8,
+        15,
+        20
+      ],
+      "req": [
+        "king-dance"
+      ]
+    },
+    {
+      "id": "king-pigeon",
+      "branch": "Yoga Holds",
+      "name": "King Pigeon",
+      "icon": "🕊️",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "mermaid-pose"
+      ]
+    },
+    {
+      "id": "full-king-pigeon",
+      "branch": "Yoga Holds",
+      "name": "Full King Pigeon",
+      "icon": "🪽",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "king-pigeon"
+      ],
+      "note": "Foot touches head"
+    },
+    {
+      "id": "scorpion-pose",
+      "branch": "Yoga Holds",
+      "name": "Scorpion Pose",
+      "icon": "🦂",
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "req": [
+        "king-pigeon",
+        "forearm-stand"
+      ],
+      "note": "Needs forearm stand (Calisthenics)"
+    },
+    {
+      "id": "hollowback-handstand",
+      "branch": "Yoga Holds",
+      "name": "Hollowback Handstand",
+      "icon": "🌙",
+      "star": true,
+      "unit": "sec",
+      "t": [
+        2,
+        5,
+        10
+      ],
+      "req": [
+        "scorpion-pose"
+      ],
+      "note": "Dream tier — scorpion in a handstand"
+    }
+  ]
+}

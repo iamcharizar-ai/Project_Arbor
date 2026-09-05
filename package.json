@@ -1,7 +1,7 @@
 {
   "name": "arbor",
   "private": true,
-  "version": "3.2.0",
+  "version": "4.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@xyflow/react": "^12.3.0",
-    "framer-motion": "^12.42.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

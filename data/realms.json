@@ -1,17 +1,23 @@
 {
-  "_comment": "ARBOR realm registry. Agent-editable. hue = HSL hue for the realm's accent. end = the domain's reasonable end goal, shown on the atlas. NOTE: adding/removing a realm ALSO requires updating REALM_FILES in the app's src/lib/vaultSync.js and the REALMS array in tools/arbor-validate.mjs — the loader iterates a hardcoded list.",
-  "realms": [
-    { "id": "cal", "name": "Calisthenics", "sub": "push · pull · core · legs", "hue": 140, "end": "The triple crown: planche push-up, one-arm pull-up, full front lever" },
-    { "id": "mob", "name": "Mobility & Balance", "sub": "flexibility · yoga · arm balances", "hue": 170, "end": "Both splits, firefly, scorpion — a bendy, balanced body" },
-    { "id": "mov", "name": "Movement Arts", "sub": "flips · dance · tricking", "hue": 20, "end": "Backflip on concrete, a breaking set, a tricking line on film" },
-    { "id": "mus", "name": "Music", "sub": "electric guitar", "hue": 260, "end": "Write and release an original track — player to musician" },
-    { "id": "aes", "name": "Aesthetics", "sub": "physique · skin · presence", "hue": 330, "end": "AAA physique, glass skin, benchmark-tier presence" },
-    { "id": "dex", "name": "Dexterity & Tricks", "sub": "hands · props · party skills", "hue": 55, "end": "Five party-grade skill combos on film" },
-    { "id": "tec", "name": "Tech & Craft", "sub": "code · AI · maker", "hue": 200, "end": "AI engineer who ships — a portfolio that gets interviews" },
-    { "id": "car", "name": "Career", "sub": "placement · CAT · interviews", "hue": 90, "end": "A signed placement offer on an A-grade PS2 — the credential floor cleared" },
-    { "id": "cat", "name": "CAT Prep", "sub": "VARC · Quant · DILR", "hue": 355, "end": "99th+ percentile across all three sections — a profile that clears the shortlist" },
-    { "id": "fin", "name": "Finance", "sub": "Etsy store · family ventures", "hue": 45, "end": "Income that isn't a salary: the shop live, family ventures papered, the house fund alive" },
-    { "id": "bok", "name": "Books", "sub": "the reading list", "hue": 240, "end": "The shelf read, not just bought — ideas that compound" },
-    { "id": "soc", "name": "Voice & Presence", "sub": "communication · content · social", "hue": 300, "end": "A voice and presence people remember — online and in the room" }
+  "_comment": "Family registry for the unified body-skill tree. Not separate pages — hue tints branch labels on the single canvas.",
+  "families": [
+    {
+      "id": "cal",
+      "name": "Calisthenics",
+      "sub": "push · pull · core · legs",
+      "hue": 140
+    },
+    {
+      "id": "mob",
+      "name": "Mobility & Balance",
+      "sub": "flexibility · yoga · arm balances",
+      "hue": 170
+    },
+    {
+      "id": "mov",
+      "name": "Movement Arts",
+      "sub": "flips · tricking · dance",
+      "hue": 20
+    }
   ]
 }

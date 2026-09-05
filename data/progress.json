@@ -5,26 +5,6 @@
     "maxRank": 1,
     "fell": false
   },
-  "e0-gstin-ask": {
-    "asOf": "2026-07-18",
-    "lvl": 1,
-    "maxRank": 1
-  },
-  "ps2-a-grade": {
-    "asOf": "2026-07-18",
-    "lvl": 1,
-    "maxRank": 1
-  },
-  "terminal-cli": {
-    "asOf": "2026-07-20",
-    "lvl": 1,
-    "maxRank": 1
-  },
-  "git-github": {
-    "asOf": "2026-07-20",
-    "lvl": 1,
-    "maxRank": 1
-  },
   "one-arm-pushup": {
     "asOf": "2026-07-21",
     "cur": 0,
