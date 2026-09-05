@@ -1,6 +1,6 @@
-import React, { useMemo, useCallback, useEffect } from 'react'
+import React, { useMemo, useCallback, useEffect, useState } from 'react'
 import {
-  ReactFlow, Handle, Position, useReactFlow, useNodesInitialized,
+  ReactFlow, Handle, Position, useReactFlow,
   ReactFlowProvider, useStore, Controls, MarkerType, BaseEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -96,7 +96,11 @@ function lodOf(zoom) {
 function TreeFlow({ onSelect, selectedId, filter, focus, pillar }) {
   const tree = useTree()
   const { fitView, setCenter } = useReactFlow()
-  const nodesInitialized = useNodesInitialized()
+  // NOTE: not useNodesInitialized() — with onlyRenderVisibleElements the
+  // off-screen nodes are never measured so that hook never flips to true,
+  // which silently killed pillar-zoom and search-focus. Nodes carry explicit
+  // width/height from layout, so the flow is usable as soon as it inits.
+  const [ready, setReady] = useState(false)
   const lod = useStore((s) => lodOf(s.transform[2]))
 
   const { nodes: baseNodes, edges: baseEdges } = useMemo(
@@ -105,27 +109,19 @@ function TreeFlow({ onSelect, selectedId, filter, focus, pillar }) {
   )
 
   useEffect(() => {
-    if (!nodesInitialized) return
-    const t = setTimeout(() => fitView({ padding: 0.16, maxZoom: 0.8 }), 40)
-    return () => clearTimeout(t)
-  }, [nodesInitialized, fitView])
-
-  useEffect(() => {
-    if (!focus || !nodesInitialized) return
+    if (!focus || !ready) return
     const n = baseNodes.find((x) => x.id === focus.id)
     if (n) setCenter(n.position.x + HALF, n.position.y + HALF, { zoom: 1.05, duration: 450 })
-  }, [focus, nodesInitialized, baseNodes, setCenter])
+  }, [focus, ready, baseNodes, setCenter])
 
   useEffect(() => {
-    if (!pillar || !nodesInitialized) return
+    if (!pillar || !ready) return
     const spec = PILLARS.find((p) => p.id === pillar)
     const wanted = new Set(spec?.branches || [pillar])
-    const ids = new Set(
-      tree.skills.filter((s) => wanted.has(s.branch)).map((s) => s.id),
-    )
-    const nodes = baseNodes.filter((n) => ids.has(n.id))
+    // fitView needs measured nodes; pass ids so it looks up the live ones
+    const nodes = tree.skills.filter((s) => wanted.has(s.branch)).map((s) => ({ id: s.id }))
     if (nodes.length) fitView({ nodes, padding: 0.2, maxZoom: 0.95, duration: 400 })
-  }, [pillar, nodesInitialized, baseNodes, tree.skills, fitView])
+  }, [pillar, ready, tree.skills, fitView])
 
   const frontierSet = useMemo(
     () => (filter === 'next' ? new Set(frontierSkills(tree).map((k) => k.id)) : null),
@@ -203,6 +199,7 @@ function TreeFlow({ onSelect, selectedId, filter, focus, pillar }) {
       edges={edges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
+      onInit={() => setReady(true)}
       onNodeClick={onNodeClick}
       onPaneClick={() => onSelect(null)}
       fitView
