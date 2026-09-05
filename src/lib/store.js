@@ -9,14 +9,14 @@ const LEGACY_KEY = 'arbor-tree-cache-v3'
 
 export const STATUS_LABEL = {
   locked: 'Locked',
-  unlocked: 'Available',
-  inprogress: 'Training',
+  unlocked: 'Unlocked',
+  inprogress: 'In progress',
   mastered: 'Mastered',
 }
 export const STATUS_DESC = {
   locked: 'locked — prerequisites not yet trained',
-  unlocked: 'available — entry criterion hit',
-  inprogress: 'training — building the PR',
+  unlocked: 'unlocked — entry criterion hit',
+  inprogress: 'in progress — building the PR',
   mastered: 'mastered — the target, hit',
 }
 const RANK = { locked: 0, unlocked: 1, inprogress: 2, mastered: 3 }

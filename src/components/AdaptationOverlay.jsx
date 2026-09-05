@@ -11,7 +11,7 @@ import { useTree, STATUS_LABEL } from '../lib/store.js'
 // then plays from the start on its own, no requestAnimationFrame restart dance
 // (which would stall on a throttled/backgrounded tab). A new pulse mid-flight
 // just remounts for the new skill; the timer restarts with it.
-const STATUS_GLOW = { unlocked: '#facc15', inprogress: '#f472b6', mastered: '#a3e635' }
+const STATUS_GLOW = { unlocked: '#ffffff', inprogress: '#e91e8c', mastered: '#b8e986' }
 const SPIN_DEG = 720 // one spin = two full turns ("360 or double of that")
 const SPIN_MS = 700
 const DURATION_MS = SPIN_MS + 700

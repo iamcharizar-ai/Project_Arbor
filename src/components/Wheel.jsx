@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from 'react'
 // ONE-SHOT spin + a glow in that tier's colour (matching the node status
 // colours), then settles back. One-shot only, per the Jul-13 perf decree: no
 // idle/looping animation ever runs here.
-const STATUS_GLOW = { unlocked: '#facc15', inprogress: '#f472b6', mastered: '#a3e635' }
+const STATUS_GLOW = { unlocked: '#ffffff', inprogress: '#e91e8c', mastered: '#b8e986' }
 // bigger tiers spin harder; all multiples of 360 so it lands back on `turns`
 const SPIN_DEG = { unlocked: 360, inprogress: 720, mastered: 1080 }
 
@@ -19,7 +19,7 @@ export default function Wheel({ turns = 0, size = 120, className = '', pulse = n
     const el = imgRef.current
     if (!el || !el.animate) return
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-    const glow = STATUS_GLOW[pulse.status] || '#facc15'
+    const glow = STATUS_GLOW[pulse.status] || '#ffffff'
     const deg = SPIN_DEG[pulse.status] || 360
     el.animate(
       [

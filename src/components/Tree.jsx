@@ -1,11 +1,14 @@
 import React, { useMemo, useCallback, useEffect } from 'react'
-import { ReactFlow, Handle, Position, useReactFlow, useNodesInitialized, ReactFlowProvider, useStore } from '@xyflow/react'
+import {
+  ReactFlow, Handle, Position, useReactFlow, useNodesInitialized,
+  ReactFlowProvider, useStore, Controls, MarkerType, BaseEdge,
+} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { layoutTree, NODE } from '../lib/layout.js'
 import { useTree, statusOf, burstOf, rec, frontierSkills } from '../lib/store.js'
 
 const HALF = NODE / 2
-const RIM = NODE / 2
+const RIM = NODE / 2 + 2
 
 const SkillNode = React.memo(
   function SkillNode({ data, selected }) {
@@ -15,8 +18,8 @@ const SkillNode = React.memo(
         className={`sk ${data.status} ${selected ? 'selected' : ''} ${data.dim ? 'dim' : ''}`}
         title={skill.name}
       >
-        <Handle type="target" position={Position.Bottom} className="handle" />
-        <Handle type="source" position={Position.Top} className="handle" />
+        <Handle type="target" position={Position.Top} className="handle" />
+        <Handle type="source" position={Position.Bottom} className="handle" />
         <div className="sk-circle">
           {data.burst > 0 && <span className="burst" key={data.burst} />}
           <span className="sk-icon">{skill.icon || '◆'}</span>
@@ -45,11 +48,11 @@ function BranchLabel({ data }) {
 
 const nodeTypes = { skill: SkillNode, branchLabel: BranchLabel }
 
-const ArrowEdge = React.memo(function ArrowEdge({ sourceX, sourceY, targetX, targetY, style, data }) {
+const ArrowEdge = React.memo(function ArrowEdge({ sourceX, sourceY, targetX, targetY, style, markerEnd }) {
   const scx = sourceX
-  const scy = sourceY + HALF
+  const scy = sourceY - HALF
   const tcx = targetX
-  const tcy = targetY - HALF
+  const tcy = targetY + HALF
   const dx = tcx - scx
   const dy = tcy - scy
   const len = Math.hypot(dx, dy) || 1
@@ -57,31 +60,24 @@ const ArrowEdge = React.memo(function ArrowEdge({ sourceX, sourceY, targetX, tar
   const sy = scy + (dy / len) * RIM
   const tx = tcx - (dx / len) * RIM
   const ty = tcy - (dy / len) * RIM
-  return (
-    <path
-      className={`react-flow__edge-path ${data?.cross ? 'edge-cross' : ''}`}
-      d={`M ${sx},${sy} L ${tx},${ty}`}
-      style={style}
-      fill="none"
-    />
-  )
+  return <BaseEdge path={`M ${sx},${sy} L ${tx},${ty}`} style={style} markerEnd={markerEnd} />
 })
 const edgeTypes = { arrow: ArrowEdge }
 
-const EDGE_STYLE = {
-  locked: { stroke: 'rgba(255,255,255,0.10)', strokeWidth: 1.4 },
-  unlocked: { stroke: 'rgba(250, 204, 21, 0.55)', strokeWidth: 2 },
-  inprogress: { stroke: 'rgba(244, 114, 182, 0.65)', strokeWidth: 2 },
-  mastered: { stroke: 'rgba(163, 230, 53, 0.7)', strokeWidth: 2.2 },
+const EDGE_COLOR = {
+  locked: 'rgba(255,255,255,0.18)',
+  unlocked: 'rgba(255,255,255,0.72)',
+  inprogress: 'rgba(233, 30, 140, 0.85)',
+  mastered: 'rgba(184, 233, 134, 0.85)',
 }
 
 const FILTERS = [
   { id: 'all', label: 'all' },
-  { id: 'cal', label: 'calisthenics' },
+  { id: 'cal', label: 'push · pull · core · legs' },
   { id: 'mob', label: 'mobility' },
   { id: 'mov', label: 'movement' },
   { id: 'next', label: 'next' },
-  { id: 'training', label: 'training' },
+  { id: 'training', label: 'in progress' },
   { id: 'mastered', label: 'mastered' },
 ]
 
@@ -102,7 +98,7 @@ function TreeFlow({ onSelect, selectedId, filter, focus }) {
 
   useEffect(() => {
     if (!nodesInitialized) return
-    const t = setTimeout(() => fitView({ padding: 0.14, maxZoom: 0.85 }), 40)
+    const t = setTimeout(() => fitView({ padding: 0.16, maxZoom: 0.8 }), 40)
     return () => clearTimeout(t)
   }, [nodesInitialized, fitView])
 
@@ -157,13 +153,21 @@ function TreeFlow({ onSelect, selectedId, filter, focus }) {
     const st = src ? statusOf(src, tree.progress) : 'locked'
     const lit = e.source === selectedId || e.target === selectedId
     const hideCross = e.data.cross && !lit && lod > 0
+    const color = EDGE_COLOR[st]
     return {
       ...e,
       hidden: hideCross,
       style: {
-        ...EDGE_STYLE[st],
-        ...(e.data.cross ? { strokeDasharray: '5 7', opacity: lit ? 0.9 : 0.45 } : {}),
-        ...(lit ? { strokeWidth: 2.6 } : {}),
+        stroke: color,
+        strokeWidth: lit ? 2.6 : e.data.cross ? 1.4 : 1.8,
+        strokeDasharray: e.data.cross ? '5 7' : undefined,
+        opacity: e.data.cross && !lit ? 0.45 : 1,
+      },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 12,
+        height: 12,
+        color,
       },
     }
   }), [baseEdges, byId, tree.progress, selectedId, lod])
@@ -183,7 +187,7 @@ function TreeFlow({ onSelect, selectedId, filter, focus }) {
       onNodeClick={onNodeClick}
       onPaneClick={() => onSelect(null)}
       fitView
-      fitViewOptions={{ padding: 0.14, maxZoom: 0.85 }}
+      fitViewOptions={{ padding: 0.16, maxZoom: 0.8 }}
       minZoom={0.12}
       maxZoom={1.8}
       nodesDraggable={false}
@@ -194,7 +198,9 @@ function TreeFlow({ onSelect, selectedId, filter, focus }) {
       panOnDrag
       zoomOnScroll
       zoomOnPinch
-    />
+    >
+      <Controls showInteractive={false} position="bottom-right" />
+    </ReactFlow>
   )
 }
 
@@ -205,8 +211,6 @@ export default function Tree({ onSelect, selectedId, focus, filter, onFilter }) 
         <TreeFlow onSelect={onSelect} selectedId={selectedId} filter={filter} focus={focus} />
       </ReactFlowProvider>
       <div className="realm-hud">
-        <h2 className="realm-hud-name">Skill tree</h2>
-        <p className="realm-hud-end">Pan · scroll to zoom · click a node to log a PR</p>
         <div className="realm-filters">
           {FILTERS.map((f) => (
             <button
@@ -220,8 +224,8 @@ export default function Tree({ onSelect, selectedId, focus, filter, onFilter }) 
         </div>
         <div className="realm-hud-legend">
           <span><i className="sw locked" /> locked</span>
-          <span><i className="sw unlocked" /> available</span>
-          <span><i className="sw inprogress" /> training</span>
+          <span><i className="sw unlocked" /> unlocked</span>
+          <span><i className="sw inprogress" /> in progress</span>
           <span><i className="sw mastered" /> mastered</span>
         </div>
       </div>

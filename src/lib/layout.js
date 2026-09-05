@@ -3,21 +3,22 @@
 // Intra-branch depth uses only same-branch prerequisites so a column reads as
 // one clear difficulty ladder. Cross-branch reqs still draw as edges.
 
-export const NODE = 76
-export const COL_GAP = 72
-export const FAMILY_GAP = 48
-export const ROW_H = 148
-export const SIB_GAP = 18
+export const NODE = 88
+export const COL_GAP = 96
+export const FAMILY_GAP = 64
+export const ROW_H = 168
+export const SIB_GAP = 28
 
+// Wings pillars first (the six body-skill columns), then mobility + movement.
 const BRANCH_ORDER = [
   'Physical Foundations',
-  'Mobility Foundations',
   'Horizontal Push',
   'Vertical Push',
   'Horizontal Pull',
   'Vertical Pull',
   'Core',
   'Legs',
+  'Mobility Foundations',
   'Flexibility',
   'Arm Balances',
   'Yoga Holds',
@@ -104,7 +105,7 @@ export function layoutTree(skills) {
       const startX = xCursor + (colW - rowW) / 2
       group.forEach((s, i) => {
         const x = startX + i * (NODE + SIB_GAP)
-        const y = -(d * ROW_H)
+        const y = d * ROW_H
         pos[s.id] = { x, y }
         nodes.push({
           id: s.id,
@@ -118,7 +119,7 @@ export function layoutTree(skills) {
     nodes.push({
       id: `label-${branch}`,
       type: 'branchLabel',
-      position: { x: xCursor + colW / 2, y: 56 },
+      position: { x: xCursor + colW / 2, y: -52 },
       data: { label: branch, family },
       selectable: false,
       draggable: false,

@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTree, statusOf, valueOf, setValue, tickNext, rec, staleInfo, STATUS_LABEL } from '../lib/store.js'
 
-const TIER_NAMES = ['Available', 'Training', 'Mastered']
-const RANK_LABEL = ['Locked', 'Available', 'Training', 'Mastered']
+const TIER_NAMES = ['Unlocked', 'In progress', 'Mastered']
+const RANK_LABEL = ['Locked', 'Unlocked', 'In progress', 'Mastered']
 
 export default function Panel({ skill, onClose, onFocus }) {
   const tree = useTree()
