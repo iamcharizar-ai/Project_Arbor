@@ -24,6 +24,15 @@ export const POINTS = { locked: 0, unlocked: 10, inprogress: 25, mastered: 60 }
 
 const ADAPT_GRACE_MS = 60 * 60 * 1000
 
+// Local calendar day (YYYY-MM-DD). Log lines are stamped in local time, so
+// everything that compares against "today" must use local time too — the old
+// toISOString() key was UTC, which made todayLog/streak/week drift for hours
+// after midnight in any timezone east of UTC.
+export function dayKey(d = new Date()) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
 let bursts = {}
 export function burstOf(id) { return bursts[id] || 0 }
 
@@ -147,7 +156,7 @@ export function dailyQuest(s = state) {
   const cands = frontierSkills(s)
   if (!cands.length) return []
   let seed = 0
-  for (const c of new Date().toISOString().slice(0, 10)) seed = (seed * 31 + c.charCodeAt(0)) >>> 0
+  for (const c of dayKey()) seed = (seed * 31 + c.charCodeAt(0)) >>> 0
   const rand = mulberry32(seed)
   const scored = cands
     .map((k) => ({ k, w: (staleInfo(k, s.progress) ? 2 : 1) + rand() }))
@@ -168,7 +177,7 @@ export function dailyQuest(s = state) {
 }
 
 export function weekStats(s = state) {
-  const cutoff = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10)
+  const cutoff = dayKey(new Date(Date.now() - 6 * 86400000))
   let ticks = 0, ups = 0
   for (const l of s.logLines) {
     if (l.date < cutoff) continue
@@ -179,7 +188,7 @@ export function weekStats(s = state) {
 }
 
 export function todayLog(s = state) {
-  const day = new Date().toISOString().slice(0, 10)
+  const day = dayKey()
   return s.logLines.filter((l) => l.date === day).reverse()
 }
 
@@ -203,12 +212,12 @@ export function streakDays(s = state) {
   const d = new Date()
   // A tick today or yesterday can start the streak (don't break at midnight
   // before the session is logged).
-  const today = d.toISOString().slice(0, 10)
-  const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+  const today = dayKey(d)
+  const yest = dayKey(new Date(Date.now() - 86400000))
   if (!days.has(today) && !days.has(yest)) return 0
   if (!days.has(today)) d.setDate(d.getDate() - 1)
   for (;;) {
-    const key = d.toISOString().slice(0, 10)
+    const key = dayKey(d)
     if (!days.has(key)) break
     streak++
     d.setDate(d.getDate() - 1)
@@ -220,7 +229,7 @@ function stamp() {
   const d = new Date()
   const p = (n) => String(n).padStart(2, '0')
   return {
-    date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
+    date: dayKey(d),
     time: `${p(d.getHours())}:${p(d.getMinutes())}`,
   }
 }
@@ -228,7 +237,7 @@ function stamp() {
 export function setValue(skill, value) {
   const before = statusOf(skill)
   const fromVal = valueOf(skill)
-  const r = { ...rec(skill.id), asOf: new Date().toISOString().slice(0, 10) }
+  const r = { ...rec(skill.id), asOf: dayKey() }
   if (skill.unit) r.cur = Math.max(0, value)
   else r.lvl = Math.max(0, Math.min(3, value))
   state = { ...state, progress: { ...state.progress, [skill.id]: r } }
