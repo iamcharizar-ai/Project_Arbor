@@ -4,19 +4,20 @@ import Panel from './components/Panel.jsx'
 import Search from './components/Search.jsx'
 import LogDrawer from './components/LogDrawer.jsx'
 import Toast from './components/Toast.jsx'
-import Wheel from './components/Wheel.jsx'
 import AdaptationOverlay from './components/AdaptationOverlay.jsx'
-import { ClickSpark } from './components/fx.jsx'
-import { useTree, overallStats, weekStats, streakDays } from './lib/store.js'
+import { Px, Wheel } from './components/Pixel.jsx'
+import { useTree, useDerived, weekStats, streakDays } from './lib/store.js'
 
 export default function App() {
   const tree = useTree()
+  const stats = useDerived()
   const [selected, setSelected] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
   const [focus, setFocus] = useState(null)
   const [filter, setFilter] = useState('all')
   const [pillar, setPillar] = useState(null)
+  const [overview, setOverview] = useState(0)
 
   useEffect(() => {
     const onKey = (e) => {
@@ -43,39 +44,42 @@ export default function App() {
     setFocus({ id: skill.id, t: Date.now() })
   }, [])
 
-  const stats = overallStats(tree)
   const week = weekStats(tree)
   const streak = streakDays(tree)
-  const vitality = stats.max ? stats.pts / stats.max : 0
+  const vitality = stats.pts / stats.max
 
   return (
     <div className="app">
-      <ClickSpark />
       <AdaptationOverlay />
       <aside className="rail">
-        <button className="brand rail-brand" onClick={() => { setSelected(null); setFilter('all'); setPillar(null) }} title="ARBOR">
-          <Wheel turns={stats.pts / 10} size={28} className="brand-wheel" pulse={tree.pulse} />
+        <button
+          className="brand"
+          type="button"
+          title="ARBOR: show the whole tree"
+          onClick={() => { setSelected(null); setFilter('all'); setPillar(null); setOverview((n) => n + 1) }}
+        >
+          <Wheel turns={stats.pts / 10} size={40} pulse={tree.pulse} />
           <span>ARBOR</span>
         </button>
         <nav className="rail-nav">
-          <button type="button" className={logOpen ? 'on' : ''} onClick={() => setLogOpen(true)} title="Log a PR (Ctrl L)">
-            <em>✎</em>
+          <button type="button" className={logOpen ? 'on' : ''} onClick={() => { setLogOpen(true); setSearchOpen(false) }} title="Log a PR (Ctrl L)">
+            <Px name="pencil" u={3} />
             <span>Log PR</span>
           </button>
-          <button type="button" className={searchOpen ? 'on' : ''} onClick={() => setSearchOpen(true)} title="Find a skill (Ctrl K)">
-            <em>⌕</em>
+          <button type="button" className={searchOpen ? 'on' : ''} onClick={() => { setSearchOpen(true); setLogOpen(false) }} title="Find a skill (Ctrl K)">
+            <Px name="search" u={3} />
             <span>Search</span>
           </button>
         </nav>
         <div className="rail-stats" title={`${stats.pts} / ${stats.max} XP · lifetime ${(vitality * 100).toFixed(1)}%`}>
-          <span className="vitality-num">⚙ {stats.pts}</span>
-          <span className="vitality-meta">{(vitality * 100).toFixed(1)}%</span>
-          {streak > 0 && <span className="vitality-streak">{streak}d</span>}
-          {week.ticks > 0 && <span className="vitality-week">+{week.ticks}</span>}
+          <span className="stat xp"><Px name="bolt" /> {stats.pts}</span>
+          <span className="stat pct">{(vitality * 100).toFixed(1)}%</span>
+          {streak > 0 && <span className="stat streak" title="day streak"><Px name="flame" /> {streak}d</span>}
+          {week.ticks > 0 && <span className="stat week" title="ticks this week">+{week.ticks}</span>}
         </div>
       </aside>
 
-      <div className="view-container">
+      <main className="view-container">
         <Tree
           onSelect={setSelected}
           selectedId={selected?.id}
@@ -84,16 +88,11 @@ export default function App() {
           onFilter={setFilter}
           pillar={pillar}
           onPillar={setPillar}
+          overview={overview}
         />
-      </div>
+      </main>
 
-      {selected && (
-        <Panel
-          skill={selected}
-          onClose={() => setSelected(null)}
-          onFocus={goTo}
-        />
-      )}
+      {selected && <Panel skill={selected} onClose={() => setSelected(null)} onFocus={goTo} />}
       <Search open={searchOpen} onClose={() => setSearchOpen(false)} onPick={goTo} />
       <LogDrawer open={logOpen} onClose={() => setLogOpen(false)} onPick={goTo} />
       <Toast />
