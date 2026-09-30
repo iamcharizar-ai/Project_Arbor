@@ -2,6 +2,7 @@
 // missing tiers/unit, and cycles. Usage: node tools/arbor-validate.mjs [data-dir]
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 const ROOT = process.argv[2] || 'data'
 const FAMILIES = ['cal', 'mob', 'mov']
@@ -40,6 +41,16 @@ for (const s of skills) {
   }
   if (s.xref) fail(`${s.id} still has xref — fold into req`)
 }
+
+// every skill needs a pictogram, and it must be a pose that exists
+const { SKILL_POSE } = await import(pathToFileURL(join(process.cwd(), 'src/lib/pixel/skillPoses.js')).href)
+const { POSES } = await import(pathToFileURL(join(process.cwd(), 'src/lib/pixel/poses.js')).href)
+for (const s of skills) {
+  const pose = SKILL_POSE[s.id]
+  if (!pose) fail(`${s.id} has no pictogram (add it to src/lib/pixel/skillPoses.js)`)
+  else if (!POSES[pose]) fail(`${s.id} uses unknown pose "${pose}"`)
+}
+for (const id of Object.keys(SKILL_POSE)) if (!ids.has(id)) fail(`skillPoses.js has "${id}" which is not a skill`)
 
 const reqMap = Object.fromEntries(skills.map((s) => [s.id, (s.req || []).filter((x) => ids.has(x))]))
 const color = {}

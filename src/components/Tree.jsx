@@ -1,75 +1,11 @@
-import React, { useMemo, useCallback, useEffect, useState } from 'react'
-import {
-  ReactFlow, Handle, Position, useReactFlow,
-  ReactFlowProvider, useStore, Controls, MarkerType, BaseEdge,
-} from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
-import { layoutTree, NODE } from '../lib/layout.js'
-import { useTree, statusOf, burstOf, rec, frontierSkills } from '../lib/store.js'
+import React, { useEffect, useMemo, useRef } from 'react'
+import { layoutTree } from '../lib/layout.js'
+import { TreeRenderer } from '../lib/treeRenderer.js'
+import { useTree, useDerived, getState, rec, STATUS_KEYS } from '../lib/store.js'
+import { Px } from './Pixel.jsx'
 
-const HALF = NODE / 2
-const RIM = NODE / 2 + 2
-
-const SkillNode = React.memo(
-  function SkillNode({ data, selected }) {
-    const skill = data.skill
-    return (
-      <div
-        className={`sk ${data.status} ${selected ? 'selected' : ''} ${data.dim ? 'dim' : ''}`}
-        title={skill.name}
-      >
-        <Handle type="target" position={Position.Top} className="handle" />
-        <Handle type="source" position={Position.Bottom} className="handle" />
-        <div className="sk-circle">
-          {data.burst > 0 && <span className="burst" key={data.burst} />}
-          <span className="sk-icon">{skill.icon || '◆'}</span>
-          {skill.star && <span className="sk-star">✦</span>}
-          {data.adapt > 0 && <span className="sk-adapt" title={`climbed back ×${data.adapt}`}>⚙</span>}
-        </div>
-        <span className="sk-name">{skill.name}</span>
-      </div>
-    )
-  },
-  (a, b) =>
-    a.selected === b.selected &&
-    a.data.status === b.data.status &&
-    a.data.burst === b.data.burst &&
-    a.data.adapt === b.data.adapt &&
-    a.data.dim === b.data.dim,
-)
-
-function BranchLabel({ data }) {
-  return (
-    <div className={`branch-label fam-${data.family || 'cal'} ${data.dim ? 'dim' : ''}`}>
-      {data.label}
-    </div>
-  )
-}
-
-const nodeTypes = { skill: SkillNode, branchLabel: BranchLabel }
-
-const ArrowEdge = React.memo(function ArrowEdge({ sourceX, sourceY, targetX, targetY, style, markerEnd }) {
-  const scx = sourceX
-  const scy = sourceY - HALF
-  const tcx = targetX
-  const tcy = targetY + HALF
-  const dx = tcx - scx
-  const dy = tcy - scy
-  const len = Math.hypot(dx, dy) || 1
-  const sx = scx + (dx / len) * RIM
-  const sy = scy + (dy / len) * RIM
-  const tx = tcx - (dx / len) * RIM
-  const ty = tcy - (dy / len) * RIM
-  return <BaseEdge path={`M ${sx},${sy} L ${tx},${ty}`} style={style} markerEnd={markerEnd} />
-})
-const edgeTypes = { arrow: ArrowEdge }
-
-const EDGE_COLOR = {
-  locked: 'rgba(255,255,255,0.18)',
-  unlocked: 'rgba(255,255,255,0.72)',
-  inprogress: 'rgba(233, 30, 140, 0.85)',
-  mastered: 'rgba(184, 233, 134, 0.85)',
-}
+// The skills are static, so the layout is computed once for the whole session.
+const LAYOUT = layoutTree(getState().skills)
 
 const PILLARS = [
   { id: 'Horizontal Push', label: 'H. Push', branches: ['Horizontal Push'] },
@@ -85,170 +21,143 @@ const PILLARS = [
 const FILTERS = [
   { id: 'all', label: 'all' },
   { id: 'next', label: 'next' },
-  { id: 'training', label: 'in progress' },
+  { id: 'training', label: 'active' },
   { id: 'mastered', label: 'mastered' },
 ]
 
-function lodOf(zoom) {
-  return zoom < 0.28 ? 2 : zoom < 0.52 ? 1 : 0
+// Open on the branch you touched last; a fresh device opens on the first steps.
+function startBranches() {
+  const { progress } = getState()
+  let best = null
+  for (const [id, r] of Object.entries(progress)) {
+    const i = LAYOUT.index.get(id)
+    if (i != null && r.asOf && (!best || r.asOf > best.asOf)) best = { asOf: r.asOf, branch: LAYOUT.nodes[i].branch }
+  }
+  return best ? [best.branch] : ['Physical Foundations', 'Horizontal Push']
 }
 
-function TreeFlow({ onSelect, selectedId, filter, focus, pillar }) {
+export default function Tree({ onSelect, selectedId, focus, filter, onFilter, pillar, onPillar, overview }) {
   const tree = useTree()
-  const { fitView, setCenter } = useReactFlow()
-  // NOTE: not useNodesInitialized() — with onlyRenderVisibleElements the
-  // off-screen nodes are never measured so that hook never flips to true,
-  // which silently killed pillar-zoom and search-focus. Nodes carry explicit
-  // width/height from layout, so the flow is usable as soon as it inits.
-  const [ready, setReady] = useState(false)
-  const lod = useStore((s) => lodOf(s.transform[2]))
-
-  const { nodes: baseNodes, edges: baseEdges } = useMemo(
-    () => layoutTree(tree.skills),
-    [tree.skills],
-  )
+  const derived = useDerived()
+  const canvasRef = useRef(null)
+  const rendererRef = useRef(null)
+  const selectRef = useRef(onSelect)
+  selectRef.current = onSelect
+  const lastPulse = useRef(tree.pulse?.n || 0)
 
   useEffect(() => {
-    if (!focus || !ready) return
-    const n = baseNodes.find((x) => x.id === focus.id)
-    if (n) setCenter(n.position.x + HALF, n.position.y + HALF, { zoom: 1.05, duration: 450 })
-  }, [focus, ready, baseNodes, setCenter])
-
-  useEffect(() => {
-    if (!pillar || !ready) return
-    const spec = PILLARS.find((p) => p.id === pillar)
-    const wanted = new Set(spec?.branches || [pillar])
-    // fitView needs measured nodes; pass ids so it looks up the live ones
-    const nodes = tree.skills.filter((s) => wanted.has(s.branch)).map((s) => ({ id: s.id }))
-    if (nodes.length) fitView({ nodes, padding: 0.2, maxZoom: 0.95, duration: 400 })
-  }, [pillar, ready, tree.skills, fitView])
-
-  const frontierSet = useMemo(
-    () => (filter === 'next' ? new Set(frontierSkills(tree).map((k) => k.id)) : null),
-    [filter, tree.skills, tree.progress],
-  )
-
-  const byId = useMemo(
-    () => Object.fromEntries(baseNodes.filter((n) => n.type === 'skill').map((n) => [n.id, n.data.skill])),
-    [baseNodes],
-  )
-
-  const nodes = useMemo(() => {
-    return baseNodes.map((n) => {
-      if (n.type === 'branchLabel') {
-        const dim = filter === 'cal' || filter === 'mob' || filter === 'mov'
-          ? n.data.family !== filter
-          : false
-        return { ...n, data: { ...n.data, dim } }
-      }
-      const skill = n.data.skill
-      const status = statusOf(skill, tree.progress)
-      let dim = false
-      if (filter === 'cal' || filter === 'mob' || filter === 'mov') dim = skill.family !== filter
-      else if (filter === 'training') dim = !(status === 'inprogress' || status === 'unlocked')
-      else if (filter === 'mastered') dim = status !== 'mastered'
-      else if (filter === 'next') dim = !frontierSet.has(skill.id)
-      return {
-        ...n,
-        selected: n.id === selectedId,
-        draggable: false,
-        data: {
-          ...n.data,
-          status,
-          burst: burstOf(skill.id),
-          adapt: rec(skill.id).adapt || 0,
-          dim,
-        },
-      }
+    const r = new TreeRenderer(canvasRef.current, LAYOUT, {
+      onSelect: (i) => selectRef.current(i >= 0 ? LAYOUT.nodes[i].skill : null),
     })
-  }, [baseNodes, selectedId, tree.progress, filter, frontierSet])
+    rendererRef.current = r
+    if (import.meta.env.DEV) window.__arbor = r // dev-only handle for debugging / profiling
+    r.fitBranches(startBranches(), false)
+    return () => { r.destroy(); rendererRef.current = null }
+  }, [])
 
-  const edges = useMemo(() => baseEdges.map((e) => {
-    const src = byId[e.source]
-    const st = src ? statusOf(src, tree.progress) : 'locked'
-    const lit = e.source === selectedId || e.target === selectedId
-    const hideCross = e.data.cross && !lit && lod > 0
-    const color = EDGE_COLOR[st]
-    return {
-      ...e,
-      hidden: hideCross,
-      style: {
-        stroke: color,
-        strokeWidth: lit ? 2.6 : e.data.cross ? 1.4 : 1.8,
-        strokeDasharray: e.data.cross ? '5 7' : undefined,
-        opacity: e.data.cross && !lit ? 0.45 : 1,
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 12,
-        height: 12,
-        color,
-      },
+  // statuses + adaptation gears → renderer
+  useEffect(() => {
+    const r = rendererRef.current
+    const n = LAYOUT.nodes.length
+    const status = new Uint8Array(n), adapt = new Uint8Array(n)
+    for (let i = 0; i < n; i++) {
+      const id = LAYOUT.nodes[i].id
+      status[i] = derived.statusById.get(id) ?? 0
+      adapt[i] = Math.min(255, rec(id, tree.progress).adapt || 0)
     }
-  }), [baseEdges, byId, tree.progress, selectedId, lod])
+    r.setStatus(status, adapt)
+  }, [derived, tree.progress])
 
-  const onNodeClick = useCallback((_, node) => {
-    if (node.type !== 'skill') return
-    onSelect(node.data.skill)
-  }, [onSelect])
+  // filter → dim mask
+  const dim = useMemo(() => {
+    if (filter === 'all') return null
+    const next = filter === 'next' ? new Set(derived.frontier.map((k) => k.id)) : null
+    const mask = new Uint8Array(LAYOUT.nodes.length)
+    LAYOUT.nodes.forEach((nd, i) => {
+      const st = derived.statusById.get(nd.id) ?? 0
+      const keep = filter === 'next' ? next.has(nd.id)
+        : filter === 'training' ? st === 1 || st === 2
+        : st === 3
+      mask[i] = keep ? 0 : 1
+    })
+    return mask
+  }, [filter, derived])
+  useEffect(() => { rendererRef.current.setDim(dim) }, [dim])
 
-  return (
-    <ReactFlow
-      className={`rf-mount-in rf-lod-${lod}`}
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
-      onInit={() => setReady(true)}
-      onNodeClick={onNodeClick}
-      onPaneClick={() => onSelect(null)}
-      fitView
-      fitViewOptions={{ padding: 0.16, maxZoom: 0.8 }}
-      minZoom={0.12}
-      maxZoom={1.8}
-      nodesDraggable={false}
-      nodesConnectable={false}
-      elementsSelectable
-      onlyRenderVisibleElements
-      proOptions={{ hideAttribution: true }}
-      panOnDrag
-      zoomOnScroll
-      zoomOnPinch
-    >
-      <Controls showInteractive={false} position="bottom-right" />
-    </ReactFlow>
-  )
-}
+  useEffect(() => {
+    rendererRef.current.setSelected(selectedId ? (LAYOUT.index.get(selectedId) ?? -1) : -1)
+  }, [selectedId])
 
-export default function Tree({ onSelect, selectedId, focus, filter, onFilter, pillar, onPillar }) {
+  // tier-up → burst on the node
+  useEffect(() => {
+    const p = tree.pulse
+    if (!p || p.n === lastPulse.current) return
+    lastPulse.current = p.n
+    const i = LAYOUT.index.get(p.skillId)
+    if (i != null) rendererRef.current.burst(i, STATUS_KEYS.indexOf(p.status))
+  }, [tree.pulse])
+
+  useEffect(() => {
+    if (!focus) return
+    const i = LAYOUT.index.get(focus.id)
+    if (i != null) rendererRef.current.focusNode(i)
+  }, [focus])
+
+  useEffect(() => {
+    if (!pillar) return
+    const spec = PILLARS.find((p) => p.id === pillar)
+    rendererRef.current.fitBranches(spec ? spec.branches : [pillar])
+  }, [pillar])
+
+  useEffect(() => { if (overview) rendererRef.current.fitAll() }, [overview])
+
+  const zoom = (f) => rendererRef.current?.zoomBy(f)
+
   return (
     <div className="realm-canvas">
-      <ReactFlowProvider>
-        <TreeFlow onSelect={onSelect} selectedId={selectedId} filter={filter} focus={focus} pillar={pillar} />
-      </ReactFlowProvider>
+      <canvas
+        ref={canvasRef}
+        className="tree-canvas"
+        tabIndex={0}
+        role="application"
+        aria-label="Skill tree. Drag to pan, scroll or pinch to zoom, arrow keys to pan. Ctrl+K searches skills."
+      />
+      <div className="zoom-controls">
+        <button type="button" onClick={() => zoom(1.4)} aria-label="Zoom in"><Px name="plus" /></button>
+        <button type="button" onClick={() => zoom(1 / 1.4)} aria-label="Zoom out"><Px name="minus" /></button>
+        <button type="button" onClick={() => { onPillar(null); rendererRef.current.fitAll() }} aria-label="Fit whole tree"><Px name="fit" /></button>
+      </div>
       <div className="realm-hud">
-        <div className="realm-filters">
+        <div className="realm-filters" role="group" aria-label="Jump to a branch">
           {PILLARS.map((p) => (
             <button
               key={p.id}
-              className={`realm-filter ${pillar === p.id ? 'on' : ''}`}
-              onClick={() => onPillar(pillar === p.id ? null : p.id)}
+              type="button"
+              className={`chip ${pillar === p.id ? 'on' : ''}`}
+              aria-pressed={pillar === p.id}
+              onClick={() => {
+                if (pillar === p.id) rendererRef.current.fitBranches(p.branches)
+                onPillar(p.id)
+              }}
             >
               {p.label}
             </button>
           ))}
-          <span className="filter-gap" />
+        </div>
+        <div className="realm-filters" role="group" aria-label="Filter skills">
           {FILTERS.map((f) => (
             <button
               key={f.id}
-              className={`realm-filter ${filter === f.id ? 'on' : ''}`}
+              type="button"
+              className={`chip alt ${filter === f.id ? 'on' : ''}`}
+              aria-pressed={filter === f.id}
               onClick={() => onFilter(f.id)}
             >
               {f.label}
             </button>
           ))}
         </div>
-        <div className="realm-hud-legend">
+        <div className="legend">
           <span><i className="sw locked" /> locked</span>
           <span><i className="sw unlocked" /> unlocked</span>
           <span><i className="sw inprogress" /> in progress</span>

@@ -4,12 +4,5 @@
     "cur": 10,
     "maxRank": 1,
     "fell": false
-  },
-  "one-arm-pushup": {
-    "asOf": "2026-07-21",
-    "cur": 0,
-    "maxRank": 3,
-    "fell": true,
-    "fellAt": 1784634549508
   }
 }

@@ -10,9 +10,23 @@ import mov from '../../data/skills/mov.json'
 const FILES = { cal, mob, mov }
 const families = familiesFile.families || []
 
+// The vault export decorates text with emoji and arrows the pixel fonts don't
+// have. Normalise them once here so every screen (and the canvas) stays in-font.
+const clean = (t) =>
+  typeof t !== 'string' ? t : t.replace(/\s*⭐/g, '').replace(/\s*✅/g, '').replace(/→/g, '>').replace(/\s{2,}/g, ' ').trim()
+
 const skills = []
 for (const [family, file] of Object.entries(FILES)) {
-  for (const s of file.skills || []) skills.push({ ...s, family })
+  for (const s of file.skills || []) {
+    const { icon: _emoji, ...rest } = s // pictograms come from lib/pixel/skillPoses.js
+    skills.push({
+      ...rest,
+      family,
+      name: clean(s.name),
+      note: clean(s.note),
+      tiers: s.tiers && Object.fromEntries(Object.entries(s.tiers).map(([k, v]) => [k, clean(v)])),
+    })
+  }
 }
 
 export const BUNDLED = {

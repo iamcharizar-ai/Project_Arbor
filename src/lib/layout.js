@@ -1,4 +1,4 @@
-// Columnar progression layout — Wings-style.
+// Columnar progression layout.
 // Each branch is a vertical column: roots at the top, harder skills below.
 // Intra-branch depth uses only same-branch prerequisites so a column reads as
 // one clear difficulty ladder. Cross-branch reqs still draw as edges.
@@ -6,15 +6,20 @@
 // Within a column, rows are ordered by barycenter sweeps (Sugiyama-style) and
 // each node is then pulled under the mean x of its parents, so edges run as
 // close to vertical as the row allows and crossings are minimised.
+//
+// Output is plain world-space data for the canvas renderer (no per-node
+// objects for a UI library to diff). It is computed once — skills are static.
 
-export const NODE = 88
-export const COL_GAP = 96
-export const FAMILY_GAP = 64
-export const ROW_H = 168
-export const SIB_GAP = 28
+import { NODE } from './pixel/sprites.js'
+
+export { NODE }
+export const COL_GAP = 110
+export const FAMILY_GAP = 70
+export const ROW_H = 150
+export const SIB_GAP = 40
+export const TITLE_Y = -64
 const STEP = NODE + SIB_GAP
 
-// Wings pillars first (the six body-skill columns), then mobility + movement.
 const BRANCH_ORDER = [
   'Physical Foundations',
   'Horizontal Push',
@@ -35,22 +40,18 @@ const BRANCH_ORDER = [
 ]
 
 const FAMILY_OF_BRANCH = {
-  'Physical Foundations': 'cal',
-  'Horizontal Push': 'cal',
-  'Vertical Push': 'cal',
-  'Horizontal Pull': 'cal',
-  'Vertical Pull': 'cal',
-  'Core': 'cal',
-  'Legs': 'cal',
-  'Mobility Foundations': 'mob',
-  'Flexibility': 'mob',
-  'Arm Balances': 'mob',
-  'Yoga Holds': 'mob',
-  'Acrobatics Foundations': 'mov',
-  'Kicks': 'mov',
-  'Flips & Twists': 'mov',
-  'Breaking': 'mov',
-  'Dance': 'mov',
+  'Physical Foundations': 'cal', 'Horizontal Push': 'cal', 'Vertical Push': 'cal', 'Horizontal Pull': 'cal',
+  'Vertical Pull': 'cal', 'Core': 'cal', 'Legs': 'cal',
+  'Mobility Foundations': 'mob', 'Flexibility': 'mob', 'Arm Balances': 'mob', 'Yoga Holds': 'mob',
+  'Acrobatics Foundations': 'mov', 'Kicks': 'mov', 'Flips & Twists': 'mov', 'Breaking': 'mov', 'Dance': 'mov',
+}
+
+// Short titles for the zoomed-out overview, where full names would collide.
+export const SHORT = {
+  'Physical Foundations': 'Base', 'Horizontal Push': 'H Push', 'Vertical Push': 'V Push', 'Horizontal Pull': 'H Pull',
+  'Vertical Pull': 'V Pull', 'Core': 'Core', 'Legs': 'Legs', 'Mobility Foundations': 'Mobility', 'Flexibility': 'Flex',
+  'Arm Balances': 'Arms', 'Yoga Holds': 'Yoga', 'Acrobatics Foundations': 'Acro', 'Kicks': 'Kicks',
+  'Flips & Twists': 'Flips', 'Breaking': 'Break', 'Dance': 'Dance',
 }
 
 function branchDepth(members) {
@@ -130,12 +131,10 @@ function orderRows(rows, ids) {
   let bestN = totalCrossings(best, parentsOf)
 
   for (let sweep = 0; sweep < 6 && bestN > 0; sweep++) {
-    // down: order each row by the mean position of its parents
     for (let d = 1; d < rows.length; d++) {
       rows[d] = sortRow(rows[d], (s, i) => bary(parentsOf(s), i))
       stamp()
     }
-    // up: order each row by the mean position of its children
     for (let d = rows.length - 2; d >= 0; d--) {
       rows[d] = sortRow(rows[d], (s, i) => bary(childrenOf.get(s.id) || [], i))
       stamp()
@@ -164,15 +163,12 @@ function placeRows(rows, ids) {
       const ps = parentsOf(s)
       return ps.length ? ps.reduce((a, p) => a + x.get(p), 0) / ps.length : null
     })
-    // nodes with no placed parent tuck in beside their neighbours
     for (let i = 0; i < want.length; i++) {
       if (want[i] != null) continue
       const left = want.slice(0, i).reverse().find((v) => v != null)
       const right = want.slice(i + 1).find((v) => v != null)
       want[i] = left != null ? left + 1 : right != null ? right - 1 : i
     }
-    // resolve overlaps by pushing right, then slide the run back so its mean
-    // matches the wanted mean (keeps a wide row centred over its parents)
     const out = want.slice()
     for (let i = 1; i < out.length; i++) if (out[i] < out[i - 1] + 1) out[i] = out[i - 1] + 1
     const mean = (a) => a.reduce((p, q) => p + q, 0) / a.length
@@ -183,7 +179,6 @@ function placeRows(rows, ids) {
 }
 
 export function layoutTree(skills) {
-  const byId = Object.fromEntries(skills.map((s) => [s.id, s]))
   const present = new Set(skills.map((s) => s.branch))
   const branches = [
     ...BRANCH_ORDER.filter((b) => present.has(b)),
@@ -191,7 +186,9 @@ export function layoutTree(skills) {
   ]
 
   const nodes = []
-  const pos = {}
+  const titles = []
+  const index = new Map()
+  const branchBox = new Map()
   let xCursor = 0
   let prevFamily = null
 
@@ -218,53 +215,35 @@ export function layoutTree(skills) {
       maxX = Math.max(maxX, v)
     }
     const span = (maxX - minX) * STEP + NODE
-    const colW = Math.max(span, 220)
+    const colW = Math.max(span, 240)
     const pad = (colW - span) / 2
 
+    const box = { x0: xCursor, y0: TITLE_Y - 8, x1: xCursor + colW, y1: 0 }
     rows.forEach((row, d) => {
       for (const s of row) {
         const x = Math.round(xCursor + pad + (xUnit.get(s.id) - minX) * STEP)
         const y = d * ROW_H
-        pos[s.id] = { x, y }
-        nodes.push({
-          id: s.id,
-          type: 'skill',
-          position: { x, y },
-          // explicit size so fitView can target nodes that have never been
-          // rendered (onlyRenderVisibleElements skips measuring off-screen ones)
-          width: NODE,
-          height: NODE,
-          data: { skill: s, depth: d },
-        })
+        index.set(s.id, nodes.length)
+        nodes.push({ id: s.id, skill: s, x, y, branch, family, depth: d })
+        box.y1 = Math.max(box.y1, y + NODE + 44)
       }
     })
-
-    nodes.push({
-      id: `label-${branch}`,
-      type: 'branchLabel',
-      position: { x: xCursor + colW / 2, y: -52 },
-      data: { label: branch, family },
-      selectable: false,
-      draggable: false,
-    })
-
+    branchBox.set(branch, box)
+    titles.push({ branch, family, cx: xCursor + colW / 2, y: TITLE_Y, w: colW, short: SHORT[branch] || branch })
     xCursor += colW + COL_GAP
   }
 
   const edges = []
-  for (const s of skills) {
-    if (!pos[s.id]) continue
-    for (const r of s.req || []) {
-      if (!byId[r] || !pos[r]) continue
-      edges.push({
-        id: `${r}->${s.id}`,
-        source: r,
-        target: s.id,
-        type: 'arrow',
-        data: { cross: byId[r].branch !== s.branch },
-      })
+  for (let ti = 0; ti < nodes.length; ti++) {
+    for (const r of nodes[ti].skill.req || []) {
+      const si = index.get(r)
+      if (si == null) continue
+      edges.push({ s: si, t: ti, cross: nodes[si].branch !== nodes[ti].branch })
     }
   }
 
-  return { nodes, edges }
+  const bounds = { x0: 0, y0: TITLE_Y - 8, x1: xCursor - COL_GAP, y1: 0 }
+  for (const n of nodes) bounds.y1 = Math.max(bounds.y1, n.y + NODE + 44)
+
+  return { nodes, titles, edges, index, branchBox, bounds }
 }
