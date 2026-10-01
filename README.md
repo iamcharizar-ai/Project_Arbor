@@ -8,9 +8,10 @@ Inspired by the feel of [Wings](https://wingssw.com/#/skilltree) — one canvas,
 
 ## What it tracks
 
-One unified tree (292 skills, 16 branches):
+One unified tree (313 skills, 17 branches):
 
 - **Calisthenics** — push, pull, core, legs (planche, front lever, handstand, muscle-up, pistol, …)
+- **Bar Dynamics** — freestyle work on the high bar: swings, kips, 180 / 360 / 540 / 720 spins, giants, laches, flyaways, monkey bars
 - **Mobility & Balance** — flexibility, yoga holds, arm balances
 - **Movement Arts** — acrobatics, kicks, flips, breaking, dance
 
@@ -37,6 +38,24 @@ The tree is one `<canvas>` (no per-node DOM, no graph library). The render loop 
 - `src/components/` — HUD, detail panel, search, PR log, toast, tier-up moment
 - `data/skills/{cal,mob,mov}.json` — the tree
 
+### The shared core and the coach
+
+`core/` is the part of Arbor that other apps embed (Life OS and Strong): the skill list, the event fold, the ledger client, the pixel figures and **the coach**. `npm run core` regenerates `core/skills.ts` from the data and copies `core/` into the sibling repos.
+
+The coach (`core/coach.ts`) decides what to practise each day, by rule, with no server:
+
+- A **working set** of a few skills per category (push, pull, core, legs, balance, mobility, bar), chosen from what is trainable and weighted toward the goal skills in `core/meta.ts`. It depends only on progress, so it changes only when you move a skill forward.
+- Each day takes the skills practised longest ago, by what was actually logged. A missed day reshuffles nothing.
+- The morning block avoids what the gym trains that evening (`core/schedule.ts`); gym add-ons are skills that need gym equipment.
+- Strength skills get a day off between sessions; one stale mastered skill is slipped in per day.
+- Movement arts (kicks, flips, breaking, dance) stay browsable in the tree but are never auto-suggested.
+
+Preview a week of plans with `node tools/coach-preview.mjs`.
+
+### Sync
+
+With `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` set, every logged value is also a `skill` event in the ledger shared with Life OS and Strong, so practice ticked in those apps shows up here and vice versa. Without them Arbor is fully local.
+
 ### Pixel art
 
 There are no emoji or image assets. Every skill is drawn as a pictogram of the body position, generated from a few joint angles:
@@ -46,7 +65,7 @@ There are no emoji or image assets. Every skill is drawn as a pictogram of the b
 - `src/lib/pixel/skillPoses.js` — which pose pictures which skill
 - `src/lib/pixel/art.js` / `sprites.js` — palette, UI glyphs, the wheel, sprite cache
 
-Adding a skill: add it to the JSON, then map its id to a pose in `skillPoses.js` (`npm run validate` fails until you do). Preview all poses with `npm run sprites` (writes `sprite-sheet.png`); regenerate the PWA icons with `npm run icons`.
+Adding a skill: add it to the JSON, map its id to a pose in `core/pixel/skillPoses.js` (`npm run validate` fails until you do), then `npm run core`. Preview all poses with `npm run sprites` (writes `sprite-sheet.png`); regenerate the PWA icons with `npm run icons`.
 
 Fonts (Pixelify Sans, Silkscreen) are bundled via `@fontsource`, so the app works offline and has no third-party requests.
 

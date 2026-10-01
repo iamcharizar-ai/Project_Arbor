@@ -1034,8 +1034,7 @@
       "icon": "🌀",
       "kind": "bridge",
       "req": [
-        "wall-handstand",
-        "cartwheel"
+        "wall-handstand"
       ],
       "tiers": {
         "u": "Cartwheel bail one side, every time",
@@ -2700,8 +2699,7 @@
         12
       ],
       "req": [
-        "pistol-box-negative",
-        "shrimp-squat"
+        "pistol-box-negative"
       ]
     },
     {
@@ -2861,6 +2859,318 @@
       "req": [
         "nordic-negative"
       ]
+    },
+    {
+      "id": "bar-swing",
+      "branch": "Bar Dynamics",
+      "name": "Bar Swing",
+      "icon": "",
+      "req": [
+        "active-hang"
+      ],
+      "tiers": {
+        "u": "Controlled hollow-to-arch swing, hips leading",
+        "p": "Swing to shoulder height at both ends",
+        "m": "Big relaxed swing with a regrip at the dead point"
+      },
+      "kind": "foundation"
+    },
+    {
+      "id": "swing-regrip",
+      "branch": "Bar Dynamics",
+      "name": "Swing Hop & Regrip",
+      "icon": "",
+      "req": [
+        "bar-swing"
+      ],
+      "tiers": {
+        "u": "Release and regrip both hands at the back-swing peak",
+        "p": "Hop with visible air time",
+        "m": "Hop between grips (over to under) on consecutive swings"
+      },
+      "kind": "foundation"
+    },
+    {
+      "id": "monkey-bar-traverse",
+      "branch": "Bar Dynamics",
+      "name": "Monkey Bar Traverse",
+      "icon": "",
+      "req": [
+        "active-hang"
+      ],
+      "tiers": {
+        "u": "Traverse the full set, one rung at a time",
+        "p": "Skip a rung, there and back",
+        "m": "Skip two rungs with a swing between each"
+      },
+      "star": true
+    },
+    {
+      "id": "lache",
+      "branch": "Bar Dynamics",
+      "name": "Lache (Bar to Bar)",
+      "icon": "",
+      "req": [
+        "swing-regrip",
+        "monkey-bar-traverse"
+      ],
+      "tiers": {
+        "u": "Release from a swing and catch a bar within reach",
+        "p": "Clear a 1 m gap",
+        "m": "Clear 1.5 m or link several in a row"
+      }
+    },
+    {
+      "id": "bar-kip",
+      "branch": "Bar Dynamics",
+      "name": "Bar Kip",
+      "icon": "",
+      "req": [
+        "bar-swing",
+        "toes-to-bar"
+      ],
+      "tiers": {
+        "u": "Kip to support from a jump or with a band",
+        "p": "Clean long-hang kip to support",
+        "m": "3 consecutive kips"
+      }
+    },
+    {
+      "id": "back-hip-circle",
+      "branch": "Bar Dynamics",
+      "name": "Back Hip Circle",
+      "icon": "",
+      "req": [
+        "pullover"
+      ],
+      "tiers": {
+        "u": "Cast and circle with bent arms or a spot",
+        "p": "Clean straight-arm circle back to support",
+        "m": "3 circles connected"
+      }
+    },
+    {
+      "id": "underswing-dismount",
+      "branch": "Bar Dynamics",
+      "name": "Underswing Dismount",
+      "icon": "",
+      "req": [
+        "bar-swing",
+        "toes-to-bar"
+      ],
+      "tiers": {
+        "u": "Toes to the bar, shoot out and land on your feet",
+        "p": "Shoot past 1.5 m with a stuck landing",
+        "m": "Cast underswing from support past 2 m"
+      }
+    },
+    {
+      "id": "bar-180",
+      "branch": "Bar Dynamics",
+      "name": "Swing 180",
+      "icon": "",
+      "req": [
+        "swing-regrip"
+      ],
+      "tiers": {
+        "u": "Half turn on the bar with one hand always on",
+        "p": "Release both hands, turn 180 and catch",
+        "m": "Linked 180s in both directions"
+      }
+    },
+    {
+      "id": "pull-180",
+      "branch": "Bar Dynamics",
+      "name": "180 Pull-Up",
+      "icon": "",
+      "req": [
+        "explosive-pullup-chest"
+      ],
+      "tiers": {
+        "u": "Explosive pull, switch grip at the top",
+        "p": "Pull, turn 180 in the air, catch",
+        "m": "3 in a row, both directions"
+      }
+    },
+    {
+      "id": "pull-360",
+      "branch": "Bar Dynamics",
+      "name": "360 Pull (Bar Spin)",
+      "icon": "",
+      "req": [
+        "pull-180",
+        "waist-pullup"
+      ],
+      "tiers": {
+        "u": "Full 360 with a low catch",
+        "p": "Clean 360 caught with bent arms",
+        "m": "360 into another pull without resetting"
+      },
+      "star": true
+    },
+    {
+      "id": "swing-360",
+      "branch": "Bar Dynamics",
+      "name": "Swing 360",
+      "icon": "",
+      "req": [
+        "bar-180"
+      ],
+      "tiers": {
+        "u": "Release at the front peak, spin 360, catch any way",
+        "p": "Clean catch with both hands together",
+        "m": "Linked straight into the next swing"
+      },
+      "star": true
+    },
+    {
+      "id": "bar-540",
+      "branch": "Bar Dynamics",
+      "name": "540",
+      "icon": "",
+      "req": [
+        "pull-360",
+        "swing-360"
+      ],
+      "tiers": {
+        "u": "540 landing on the ground under the bar",
+        "p": "540 caught on the bar",
+        "m": "Consistent on demand"
+      }
+    },
+    {
+      "id": "bar-720",
+      "branch": "Bar Dynamics",
+      "name": "720",
+      "icon": "",
+      "req": [
+        "bar-540"
+      ],
+      "tiers": {
+        "u": "720 attempted with a safe bail",
+        "p": "720 caught",
+        "m": "Consistent on demand"
+      },
+      "star": true
+    },
+    {
+      "id": "muscle-up-360",
+      "branch": "Bar Dynamics",
+      "name": "Muscle-Up 360",
+      "icon": "",
+      "req": [
+        "muscle-up",
+        "pull-360"
+      ],
+      "tiers": {
+        "u": "Muscle-up, spin 360 above the bar, land in support with a spot",
+        "p": "Clean catch in support",
+        "m": "Linked into a dip or second rep"
+      }
+    },
+    {
+      "id": "alley-oop",
+      "branch": "Bar Dynamics",
+      "name": "Alley-Oop",
+      "icon": "",
+      "req": [
+        "swing-360"
+      ],
+      "tiers": {
+        "u": "Back-swing release with a half turn",
+        "p": "Full alley-oop 360 caught",
+        "m": "Linked from a swing without a reset"
+      }
+    },
+    {
+      "id": "baby-giant",
+      "branch": "Bar Dynamics",
+      "name": "Baby Giant",
+      "icon": "",
+      "req": [
+        "bar-kip",
+        "back-hip-circle"
+      ],
+      "tiers": {
+        "u": "Cast to horizontal and swing down under control",
+        "p": "Bent-arm circle back to support",
+        "m": "3 baby giants connected"
+      }
+    },
+    {
+      "id": "giant",
+      "branch": "Bar Dynamics",
+      "name": "Giant Swing",
+      "icon": "",
+      "req": [
+        "baby-giant"
+      ],
+      "tiers": {
+        "u": "Giant with straps or a spot",
+        "p": "One clean giant, straight arms",
+        "m": "3 giants connected"
+      },
+      "star": true
+    },
+    {
+      "id": "shrimp-flip",
+      "branch": "Bar Dynamics",
+      "name": "Shrimp Flip",
+      "icon": "",
+      "req": [
+        "swing-regrip",
+        "back-hip-circle"
+      ],
+      "tiers": {
+        "u": "Forward rotation over the bar with a spot or into a pit",
+        "p": "Shrimp flip caught on the bar",
+        "m": "Linked from a swing"
+      }
+    },
+    {
+      "id": "flyaway",
+      "branch": "Bar Dynamics",
+      "name": "Flyaway",
+      "icon": "",
+      "req": [
+        "underswing-dismount"
+      ],
+      "tiers": {
+        "u": "Tucked flyaway into a pit or with a spot",
+        "p": "Tucked flyaway to feet on a mat",
+        "m": "Layout flyaway, stuck landing"
+      },
+      "star": true
+    },
+    {
+      "id": "front-flyaway",
+      "branch": "Bar Dynamics",
+      "name": "Front Flyaway",
+      "icon": "",
+      "req": [
+        "flyaway"
+      ],
+      "tiers": {
+        "u": "Front flyaway with a spot",
+        "p": "To feet on a mat",
+        "m": "Stuck landing on demand"
+      }
+    },
+    {
+      "id": "geinger",
+      "branch": "Bar Dynamics",
+      "name": "Geinger",
+      "icon": "",
+      "req": [
+        "giant",
+        "flyaway",
+        "swing-360"
+      ],
+      "tiers": {
+        "u": "Drilled into a pit with a spot",
+        "p": "Release, half turn, regrasp",
+        "m": "Linked out of a giant"
+      }
     }
   ]
 }

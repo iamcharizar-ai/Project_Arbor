@@ -26,6 +26,7 @@ const BRANCH_ORDER = [
   'Vertical Push',
   'Horizontal Pull',
   'Vertical Pull',
+  'Bar Dynamics',
   'Core',
   'Legs',
   'Mobility Foundations',
@@ -41,7 +42,7 @@ const BRANCH_ORDER = [
 
 const FAMILY_OF_BRANCH = {
   'Physical Foundations': 'cal', 'Horizontal Push': 'cal', 'Vertical Push': 'cal', 'Horizontal Pull': 'cal',
-  'Vertical Pull': 'cal', 'Core': 'cal', 'Legs': 'cal',
+  'Vertical Pull': 'cal', 'Bar Dynamics': 'cal', 'Core': 'cal', 'Legs': 'cal',
   'Mobility Foundations': 'mob', 'Flexibility': 'mob', 'Arm Balances': 'mob', 'Yoga Holds': 'mob',
   'Acrobatics Foundations': 'mov', 'Kicks': 'mov', 'Flips & Twists': 'mov', 'Breaking': 'mov', 'Dance': 'mov',
 }
@@ -49,7 +50,7 @@ const FAMILY_OF_BRANCH = {
 // Short titles for the zoomed-out overview, where full names would collide.
 export const SHORT = {
   'Physical Foundations': 'Base', 'Horizontal Push': 'H Push', 'Vertical Push': 'V Push', 'Horizontal Pull': 'H Pull',
-  'Vertical Pull': 'V Pull', 'Core': 'Core', 'Legs': 'Legs', 'Mobility Foundations': 'Mobility', 'Flexibility': 'Flex',
+  'Vertical Pull': 'V Pull', 'Bar Dynamics': 'Bar', 'Core': 'Core', 'Legs': 'Legs', 'Mobility Foundations': 'Mobility', 'Flexibility': 'Flex',
   'Arm Balances': 'Arms', 'Yoga Holds': 'Yoga', 'Acrobatics Foundations': 'Acro', 'Kicks': 'Kicks',
   'Flips & Twists': 'Flips', 'Breaking': 'Break', 'Dance': 'Dance',
 }

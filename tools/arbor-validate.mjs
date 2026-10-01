@@ -43,11 +43,11 @@ for (const s of skills) {
 }
 
 // every skill needs a pictogram, and it must be a pose that exists
-const { SKILL_POSE } = await import(pathToFileURL(join(process.cwd(), 'src/lib/pixel/skillPoses.js')).href)
-const { POSES } = await import(pathToFileURL(join(process.cwd(), 'src/lib/pixel/poses.js')).href)
+const { SKILL_POSE } = await import(pathToFileURL(join(process.cwd(), 'core/pixel/skillPoses.js')).href)
+const { POSES } = await import(pathToFileURL(join(process.cwd(), 'core/pixel/poses.js')).href)
 for (const s of skills) {
   const pose = SKILL_POSE[s.id]
-  if (!pose) fail(`${s.id} has no pictogram (add it to src/lib/pixel/skillPoses.js)`)
+  if (!pose) fail(`${s.id} has no pictogram (add it to core/pixel/skillPoses.js)`)
   else if (!POSES[pose]) fail(`${s.id} uses unknown pose "${pose}"`)
 }
 for (const id of Object.keys(SKILL_POSE)) if (!ids.has(id)) fail(`skillPoses.js has "${id}" which is not a skill`)

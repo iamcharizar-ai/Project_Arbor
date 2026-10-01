@@ -5,3 +5,4 @@ dist/
 .vercel
 public/__fixture.json
 sprite-sheet.png
+*.local

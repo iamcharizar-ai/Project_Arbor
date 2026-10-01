@@ -10,7 +10,8 @@
     "sync": "node tools/sync-data.mjs",
     "validate": "node tools/arbor-validate.mjs",
     "icons": "node tools/make-icons.mjs",
-    "sprites": "node tools/sprite-sheet.mjs"
+    "sprites": "node tools/sprite-sheet.mjs",
+    "core": "node tools/build-core.mjs"
   },
   "dependencies": {
     "@fontsource/pixelify-sans": "^5.3.0",

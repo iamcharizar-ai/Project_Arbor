@@ -104,6 +104,9 @@ button { cursor: pointer; background: none; border: 0; }
 .stat.pct { color: var(--text-mid); }
 .stat.streak { color: var(--inprogress); }
 .stat.week { color: var(--mastered); }
+.stat.sync { color: var(--dim); font-size: 9px; }
+.stat.sync.live { color: var(--mastered); }
+.stat.sync.error { color: var(--inprogress); }
 
 /* ── canvas + HUD ── */
 .realm-canvas { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }

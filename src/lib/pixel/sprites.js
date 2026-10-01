@@ -1,9 +1,9 @@
 // Runtime sprite cache: pixel data → small offscreen canvases (drawn 1:1 art
 // pixel → SCALE device px, nearest-neighbour) that the tree canvas blits, plus
 // data-URL versions of the UI glyphs and wheel for the DOM chrome.
-import { renderPose, G } from './figure.js'
-import { POSES } from './poses.js'
-import { poseOf } from './skillPoses.js'
+import { renderPose, G } from '../../../core/pixel/figure.js'
+import { POSES } from '../../../core/pixel/poses.js'
+import { poseOf } from '../../../core/pixel/skillPoses.js'
 import { SKIN, GLYPHS, WHEEL, wheelPixels, WHEEL_TONES } from './art.js'
 
 export const SCALE = 4          // device px per art pixel inside the caches

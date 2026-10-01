@@ -35,6 +35,11 @@ const S = {
   'muscle-up': 'muscleUp', 'strict-muscle-up': 'muscleUp', 'oap-negative': 'pullOne', 'one-arm-pullup': 'pullOne',
   'dead-hang-human-flag': 'flagDead', 'tuck-human-flag': 'flagTuck', 'straddle-human-flag': 'flagStrad', 'human-flag': 'humanFlag',
   'headbangers': 'pullTop', 'typewriter-pullup': 'archerPull', 'oac-negative': 'pullOne', 'one-arm-chinup': 'pullOne',
+  // Bar Dynamics
+  'bar-swing': 'barSwing', 'swing-regrip': 'barSwing', 'monkey-bar-traverse': 'monkeyBars', 'lache': 'lache', 'bar-kip': 'toesBar',
+  'back-hip-circle': 'hipCircle', 'underswing-dismount': 'lache', 'bar-180': 'barSpin', 'pull-180': 'barSpin', 'pull-360': 'barSpin',
+  'swing-360': 'barSpin', 'bar-540': 'barSpin', 'bar-720': 'barSpin', 'muscle-up-360': 'barSpin', 'alley-oop': 'barSpin',
+  'baby-giant': 'giant', 'giant': 'giant', 'shrimp-flip': 'flyaway', 'flyaway': 'flyaway', 'front-flyaway': 'flyaway', 'geinger': 'flyaway',
   // Horizontal Pull
   'assisted-inverted-row': 'row', 'inverted-row': 'row', 'bulgarian-row': 'rowTop', 'one-arm-inverted-row': 'rowTop',
   'tuck-fl': 'flTuck', 'front-lever-raises-tuck': 'flTuck', 'tuck-fl-row': 'flTuck', 'single-leg-tuck-fl': 'flOne',

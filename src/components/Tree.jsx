@@ -12,6 +12,7 @@ const PILLARS = [
   { id: 'Vertical Push', label: 'V. Push', branches: ['Vertical Push'] },
   { id: 'Horizontal Pull', label: 'H. Pull', branches: ['Horizontal Pull'] },
   { id: 'Vertical Pull', label: 'V. Pull', branches: ['Vertical Pull'] },
+  { id: 'Bar Dynamics', label: 'Bar Flow', branches: ['Bar Dynamics'] },
   { id: 'Core', label: 'Core', branches: ['Core'] },
   { id: 'Legs', label: 'Legs', branches: ['Legs'] },
   { id: 'Flexibility', label: 'Mobility', branches: ['Flexibility', 'Mobility Foundations', 'Arm Balances', 'Yoga Holds'] },

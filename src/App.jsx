@@ -6,11 +6,12 @@ import LogDrawer from './components/LogDrawer.jsx'
 import Toast from './components/Toast.jsx'
 import AdaptationOverlay from './components/AdaptationOverlay.jsx'
 import { Px, Wheel } from './components/Pixel.jsx'
-import { useTree, useDerived, weekStats, streakDays } from './lib/store.js'
+import { useTree, useDerived, useSync, weekStats, streakDays } from './lib/store.js'
 
 export default function App() {
   const tree = useTree()
   const stats = useDerived()
+  const sync = useSync()
   const [selected, setSelected] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
@@ -76,6 +77,11 @@ export default function App() {
           <span className="stat pct">{(vitality * 100).toFixed(1)}%</span>
           {streak > 0 && <span className="stat streak" title="day streak"><Px name="flame" /> {streak}d</span>}
           {week.ticks > 0 && <span className="stat week" title="ticks this week">+{week.ticks}</span>}
+          {sync.status !== 'off' && (
+            <span className={`stat sync ${sync.status}`} title={sync.status === 'live' ? 'Synced with Life OS and Strong' : sync.status === 'connecting' ? 'Connecting...' : 'Offline: changes are queued'}>
+              {sync.status === 'live' ? 'synced' : sync.status === 'connecting' ? '...' : 'offline'}{sync.pending > 0 ? ` ${sync.pending}` : ''}
+            </span>
+          )}
         </div>
       </aside>
 

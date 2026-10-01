@@ -81,6 +81,15 @@ export const POSES = {
   flagStrad:  { t: 270, hd: -30, a: [350, 350], b: [190, 190], l: [80, 80], m: [108, 108], props: ['pole'] },
   flagDead:   { t: 0, hd: 30, a: [3, 0], b: [355, 355], l: [182, 178], props: ['pole'] },
 
+  // ── bar dynamics ───────────────────────────────────────────────────────
+  barSwing:   { t: 335, hd: 30, a: [350, 345], l: [150, 150], props: ['bar', 'speed'] },
+  monkeyBars: { t: 10, hd: 30, a: [30, 20], b: [335, 345], l: [190, 205], m: [165, 175], props: ['bar', 'speed'] },
+  barSpin:    { t: 0, hd: 25, a: [20, 350], b: [340, 10], l: [182, 195], props: ['bar', 'spin', 'twist'] },
+  hipCircle:  { t: 0, hd: 25, a: [180, 180], l: [180, 170], props: ['bar', 'spin'] },
+  giant:      { t: 180, a: [180, 180], l: [0, 0], m: [4, 358], props: ['bar', 'spin'] },
+  lache:      { t: 60, hd: -20, a: [40, 40], l: [232, 250], props: ['speed', 'up'] },
+  flyaway:    { t: 200, hd: -30, a: [100, 20], l: [20, 170], props: ['spin', 'speed'] },
+
   // ── horizontal pull ────────────────────────────────────────────────────
   row:        { t: 75, hd: -15, a: [0, 0], l: [255, 255], props: [F, 'bar'] },
   rowTop:     { t: 70, hd: -15, a: [150, 20], l: [250, 250], props: [F, 'bar'] },

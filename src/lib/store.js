@@ -1,8 +1,11 @@
 import { useSyncExternalStore } from 'react'
 import { BUNDLED } from './bundledTree.js'
+import { createLedger } from '../../core/ledger.ts'
 
 // Local-first store. Progress + the PR log live in localStorage so the app
-// works offline with no vault folder.
+// works offline. When the shared ledger is configured (VITE_SUPABASE_*), every
+// change is also a `skill` event there, so Life OS and Strong see the same
+// progress and can log practice on Arbor's behalf.
 
 const STORAGE_KEY = 'arbor-progress-v4'
 const LEGACY_KEY = 'arbor-tree-cache-v3'
@@ -264,13 +267,17 @@ function stamp() {
   return { date: dayKey(d), time: `${p(d.getHours())}:${p(d.getMinutes())}` }
 }
 
-export function setValue(skill, value) {
+/**
+ * Apply a new value. `remote` = it came from the ledger (another device, or
+ * Life OS / Strong): same bookkeeping, but no toast, no celebration, no re-emit.
+ */
+function applyValue(skill, value, { at = new Date().toISOString(), day = dayKey(), remote = false } = {}) {
   const prev = rec(skill.id)
   const before = statusOf(skill)
   const fromVal = valueOf(skill)
   const num = Number.isFinite(value) ? Math.round(value) : fromVal
 
-  const r = { ...prev, asOf: dayKey() }
+  const r = { ...prev, asOf: day, at }
   if (skill.unit) r.cur = Math.max(0, num)
   else r.lvl = Math.max(0, Math.min(3, num))
   const after = statusFrom(skill, r)
@@ -297,7 +304,7 @@ export function setValue(skill, value) {
       from: fromVal, to: newVal, unit: skill.unit || 'tier', status: after, up,
     }
     logLines = [...logLines, line].slice(-LOG_CAP)
-    pushToast({
+    if (!remote) pushToast({
       id: Date.now(),
       msg: up ? `${skill.name} > ${STATUS_LABEL[after]}` : `${skill.name}  ${fromVal} > ${newVal} ${line.unit}`,
       status: after,
@@ -309,11 +316,67 @@ export function setValue(skill, value) {
     ...state,
     progress: { ...state.progress, [skill.id]: r },
     logLines,
-    pulse: up ? { n: (state.pulse?.n || 0) + 1, status: after, skillId: skill.id } : state.pulse,
+    pulse: up && !remote ? { n: (state.pulse?.n || 0) + 1, status: after, skillId: skill.id } : state.pulse,
   }
+  return newVal
+}
+
+export function setValue(skill, value) {
+  const newVal = applyValue(skill, value)
   persist()
   bus.emit()
+  ledger.emit('skill', { skillId: skill.id, value: newVal, kind: skill.unit ? 'cur' : 'lvl' })
 }
+
+// ── shared ledger ───────────────────────────────────────────────────────────
+let sync = { status: 'off', pending: 0 }
+const syncBus = createEmitter()
+export const useSync = () => useSyncExternalStore(syncBus.on, () => sync)
+
+function onLedgerEvents(events, boot) {
+  let changed = false
+  for (const ev of events) {
+    const p = ev.payload || {}
+    const skill = BY_ID.get(String(p.skillId || ''))
+    if (!skill) continue
+    const r = rec(skill.id)
+    if (typeof p.value === 'number') {
+      if (r.at && ev.at <= r.at) continue // already have this (or something newer)
+      applyValue(skill, p.value, { at: ev.at, day: ev.day, remote: true })
+      changed = true
+    } else if (p.done === true && (!r.asOf || ev.day > r.asOf)) {
+      // practised without a new number: it still counts as "touched"
+      state = { ...state, progress: { ...state.progress, [skill.id]: { ...r, asOf: ev.day } } }
+      changed = true
+    }
+  }
+  // First sync from this device: publish anything logged here before sync existed.
+  if (boot) {
+    for (const [id, r] of Object.entries(state.progress)) {
+      const skill = BY_ID.get(id)
+      if (!skill || r.at) continue
+      const value = skill.unit ? r.cur : r.lvl
+      if (typeof value !== 'number') continue
+      const ev = ledger.emit('skill', { skillId: id, value, kind: skill.unit ? 'cur' : 'lvl', done: false }, r.asOf || dayKey())
+      state = { ...state, progress: { ...state.progress, [id]: { ...state.progress[id], at: ev.at } } }
+      changed = true
+    }
+  }
+  if (changed) { persist(); bus.emit() }
+}
+
+const LEDGER_OFF = import.meta.env.VITE_SUPABASE_DISABLE === '1'
+const ledger = createLedger({
+  // VITE_SUPABASE_DISABLE=1 forces local-only mode even when keys are present,
+  // so dev / test runs can never write to the real ledger.
+  url: LEDGER_OFF ? undefined : import.meta.env.VITE_SUPABASE_URL,
+  key: LEDGER_OFF ? undefined : import.meta.env.VITE_SUPABASE_ANON_KEY,
+  app: 'arbor',
+  types: ['skill'],
+  onEvents: onLedgerEvents,
+  onStatus: (status, pending) => { sync = { status, pending }; syncBus.emit() },
+})
+ledger.start()
 
 export function tickNext(skill) {
   const val = valueOf(skill)

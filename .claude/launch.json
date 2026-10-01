@@ -4,14 +4,26 @@
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 5178
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 5178,
+      "env": {
+        "VITE_SUPABASE_DISABLE": "1"
+      }
     },
     {
       "name": "preview",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "preview"],
-      "port": 4173
+      "runtimeArgs": [
+        "run",
+        "preview"
+      ],
+      "port": 4173,
+      "env": {
+        "VITE_SUPABASE_DISABLE": "1"
+      }
     }
   ]
 }

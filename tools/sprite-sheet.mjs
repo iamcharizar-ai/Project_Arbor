@@ -1,8 +1,8 @@
 // Dev aid: render every pose to a PNG contact sheet so pictograms can be
 // reviewed without a browser.  node tools/sprite-sheet.mjs [out.png] [filter,filter]
 import { writeFileSync } from 'node:fs'
-import { renderPose, G } from '../src/lib/pixel/figure.js'
-import { POSES } from '../src/lib/pixel/poses.js'
+import { renderPose, G } from '../core/pixel/figure.js'
+import { POSES } from '../core/pixel/poses.js'
 import { Raster, hex } from './png.mjs'
 
 const out = process.argv[2] || 'sprite-sheet.png'
