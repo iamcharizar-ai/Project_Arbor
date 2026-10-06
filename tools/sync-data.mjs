@@ -5,7 +5,7 @@
 // All-or-nothing: the snapshot is staged in a temp dir, every source file must exist, the staged
 // copy must validate, and only then does data/ get replaced. A bad or half-synced vault leaves
 // the bundled tree exactly as it was.
-import { readFileSync, writeFileSync, mkdirSync, existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, mkdtempSync, rmSync, renameSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -46,14 +46,34 @@ try {
   } catch {
     valid = false
   }
+  // the validator reads the skill families only; progress.json has to parse too
+  try {
+    const p = JSON.parse(readFileSync(join(STAGE, 'progress.json'), 'utf8'))
+    if (p === null || typeof p !== 'object' || Array.isArray(p)) throw new Error('not an object')
+    console.log('progress.json — ok')
+  } catch (e) {
+    console.error(`  ✗ progress.json: ${e.message}`)
+    valid = false
+  }
 
   if (valid) {
+    // Two steps so a failed write cannot leave a half-written file: every new file is first written
+    // beside its target, then each is swapped in with a rename (atomic per file). Other files in
+    // data/ are never touched.
     console.log('\nInstalling into data/')
-    for (const rel of FILES) {
-      const to = join(DEST, rel)
-      mkdirSync(dirname(to), { recursive: true })
-      writeFileSync(to, readFileSync(join(STAGE, rel)))
-      console.log(`  ✓ ${rel}`)
+    const next = FILES.map((rel) => ({ rel, to: join(DEST, rel), tmp: join(DEST, rel) + '.new' }))
+    try {
+      for (const f of next) {
+        mkdirSync(dirname(f.to), { recursive: true })
+        writeFileSync(f.tmp, readFileSync(join(STAGE, f.rel)))
+      }
+    } catch (e) {
+      for (const f of next) rmSync(f.tmp, { force: true })
+      throw e
+    }
+    for (const f of next) {
+      renameSync(f.tmp, f.to)
+      console.log(`  ✓ ${f.rel}`)
     }
     console.log('\nSnapshot refreshed. Rebuild + redeploy to publish it.')
   } else {

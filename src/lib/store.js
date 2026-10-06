@@ -356,10 +356,12 @@ function onLedgerEvents(events, boot) {
       if (!skill || r.at) continue
       const value = skill.unit ? r.cur : r.lvl
       if (typeof value !== 'number') continue
-      // Backdated to the start of its day: this is the bundled seed or an old local value, so any real
-      // event logged elsewhere (even offline, flushed later) must beat it under last-write-wins.
+      // Backdated: this is the bundled seed or an old local value, so any real event logged elsewhere
+      // (even offline, flushed later) must beat it under last-write-wins. UTC midnight of the day BEFORE
+      // is earlier than any moment of `day` in every time zone (local midnight is at most 14h from UTC).
       const day = r.asOf || dayKey()
-      const ev = ledger.emit('skill', { skillId: id, value, kind: skill.unit ? 'cur' : 'lvl', done: false }, day, `${day}T00:00:00.000Z`)
+      const seedAt = new Date(Date.parse(`${day}T00:00:00Z`) - 864e5).toISOString()
+      const ev = ledger.emit('skill', { skillId: id, value, kind: skill.unit ? 'cur' : 'lvl', done: false }, day, seedAt)
       state = { ...state, progress: { ...state.progress, [id]: { ...state.progress[id], at: ev.at } } }
       changed = true
     }
