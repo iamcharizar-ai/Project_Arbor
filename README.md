@@ -60,9 +60,9 @@ With `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` set, every logged value is a
 
 There are no emoji or image assets. Every skill is drawn as a pictogram of the body position, generated from a few joint angles:
 
-- `src/lib/pixel/figure.js` — pose → pixel grid (forward kinematics + Bresenham)
-- `src/lib/pixel/poses.js` — the named poses
-- `src/lib/pixel/skillPoses.js` — which pose pictures which skill
+- `core/pixel/figure.js` — pose → pixel grid (forward kinematics + Bresenham)
+- `core/pixel/poses.js` — the named poses
+- `core/pixel/skillPoses.js` — which pose pictures which skill
 - `src/lib/pixel/art.js` / `sprites.js` — palette, UI glyphs, the wheel, sprite cache
 
 Adding a skill: add it to the JSON, map its id to a pose in `core/pixel/skillPoses.js` (`npm run validate` fails until you do), then `npm run core`. Preview all poses with `npm run sprites` (writes `sprite-sheet.png`); regenerate the PWA icons with `npm run icons`.

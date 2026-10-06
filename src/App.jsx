@@ -47,7 +47,7 @@ export default function App() {
 
   const week = weekStats(tree)
   const streak = streakDays(tree)
-  const vitality = stats.pts / stats.max
+  const vitality = stats.max ? stats.pts / stats.max : 0
 
   return (
     <div className="app">

@@ -13,6 +13,7 @@ export default function Panel({ skill, onClose, onFocus }) {
   const fellBelow = (r.maxRank || 0) > RANK[status]
   const [draft, setDraft] = useState(String(val))
   useEffect(() => { setDraft(String(val)) }, [val, skill.id])
+  const tiers = skill.t || []
   const reqs = useMemo(() => (skill.req || []).map(skillById).filter(Boolean), [skill])
 
   const commitDraft = () => {
@@ -72,7 +73,7 @@ export default function Panel({ skill, onClose, onFocus }) {
           <div className="quick">
             <button type="button" onClick={() => bump(1)}>+1</button>
             <button type="button" onClick={() => bump(5)}>+5</button>
-            {(skill.t || []).map((th, i) => (
+            {tiers.map((th, i) => (
               val < th ? (
                 <button key={th} type="button" className={`jump t${i}`} onClick={() => setValue(skill, th)}>
                   <Px name="arrow" /> {th} {skill.unit}
@@ -81,7 +82,7 @@ export default function Panel({ skill, onClose, onFocus }) {
             ))}
           </div>
           <div className="tier-list">
-            {skill.t.map((th, i) => (
+            {tiers.map((th, i) => (
               <div key={i} className={`tier t${i} ${val >= th ? 'hit' : ''}`}>
                 <span className="tier-name">{TIER_NAMES[i]}</span>
                 <span className="tier-crit">{th} {skill.unit}</span>
@@ -89,8 +90,8 @@ export default function Panel({ skill, onClose, onFocus }) {
               </div>
             ))}
           </div>
-          <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={skill.t[2]} aria-valuenow={Math.min(val, skill.t[2])}>
-            <div style={{ width: `${Math.min(100, (val / skill.t[2]) * 100)}%` }} />
+          <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={tiers[2] ?? 0} aria-valuenow={Math.min(val, tiers[2] ?? 0)}>
+            <div style={{ width: `${tiers[2] ? Math.min(100, (val / tiers[2]) * 100) : 0}%` }} />
           </div>
         </>
       ) : (

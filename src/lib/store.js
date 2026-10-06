@@ -261,8 +261,7 @@ export function streakDays(s = state) {
 }
 
 // ── mutations ───────────────────────────────────────────────────────────────
-function stamp() {
-  const d = new Date()
+function stamp(d = new Date()) {
   const p = (n) => String(n).padStart(2, '0')
   return { date: dayKey(d), time: `${p(d.getHours())}:${p(d.getMinutes())}` }
 }
@@ -300,7 +299,7 @@ function applyValue(skill, value, { at = new Date().toISOString(), day = dayKey(
   const up = afterRank > RANK[before]
   if (fromVal !== newVal) {
     const line = {
-      ...stamp(), id: skill.id, name: skill.name,
+      ...(remote ? { ...stamp(new Date(at)), date: day } : stamp()), id: skill.id, name: skill.name,
       from: fromVal, to: newVal, unit: skill.unit || 'tier', status: after, up,
     }
     logLines = [...logLines, line].slice(-LOG_CAP)
@@ -357,7 +356,12 @@ function onLedgerEvents(events, boot) {
       if (!skill || r.at) continue
       const value = skill.unit ? r.cur : r.lvl
       if (typeof value !== 'number') continue
-      const ev = ledger.emit('skill', { skillId: id, value, kind: skill.unit ? 'cur' : 'lvl', done: false }, r.asOf || dayKey())
+      // Backdated: this is the bundled seed or an old local value, so any real event logged elsewhere
+      // (even offline, flushed later) must beat it under last-write-wins. UTC midnight of the day BEFORE
+      // is earlier than any moment of `day` in every time zone (local midnight is at most 14h from UTC).
+      const day = r.asOf || dayKey()
+      const seedAt = new Date(Date.parse(`${day}T00:00:00Z`) - 864e5).toISOString()
+      const ev = ledger.emit('skill', { skillId: id, value, kind: skill.unit ? 'cur' : 'lvl', done: false }, day, seedAt)
       state = { ...state, progress: { ...state.progress, [id]: { ...state.progress[id], at: ev.at } } }
       changed = true
     }
