@@ -11,5 +11,5 @@ createRoot(document.getElementById('root')).render(<App />)
 
 // PWA install is optional; it just makes the notepad feel native. Prod only.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'))
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('Service worker registration failed; carrying on without offline support', err)))
 }

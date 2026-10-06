@@ -22,6 +22,6 @@ for (let i = 0; i < 7; i++) {
   console.log('  morning:', plan.morning.map((id) => `${name(id)} (${targetFor(SKILL_BY_ID.get(id), state.progress)})`).join(' | '))
   console.log('  gym +  :', plan.gym.map(name).join(' | ') || '-')
   // pretend everything planned was practised
-  state = foldArbor(state, [...plan.morning, ...plan.gym].map((skillId) => ({ device: 'x', at: `${day}T07:00:00.000Z`, day, type: 'skill', payload: { skillId } })))
+  state = foldArbor(state, [...plan.morning, ...plan.gym].map((skillId) => ({ device: 'x', at: `${day}T07:00:00.000Z`, day, type: 'skill', payload: { skillId, done: true } })))
   d.setDate(d.getDate() + 1)
 }

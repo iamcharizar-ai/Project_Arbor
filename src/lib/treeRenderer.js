@@ -66,7 +66,7 @@ export class TreeRenderer {
     // canvas text never triggers a redraw when a webfont lands, so ask for the exact
     // faces we draw with and repaint once they're in
     Promise.all([`600 ${LABEL_PX}px ${FONT_UI}`, `700 16px ${FONT_TITLE}`].map((f) => document.fonts?.load(f)))
-      .then(() => { this.prepareLabels(); this.request() }, () => {})
+      .then(() => { if (this.destroyed) return; this.prepareLabels(); this.request() }, () => {})
     this.resize()
     this.prewarm()
   }
@@ -115,7 +115,10 @@ export class TreeRenderer {
   }
 
   destroy() {
+    this.destroyed = true
     cancelAnimationFrame(this.raf)
+    this.raf = 0
+    if (this._idle != null) (window.requestIdleCallback && window.cancelIdleCallback ? window.cancelIdleCallback : clearTimeout)(this._idle)
     this.ro?.disconnect()
     for (const [t, fn] of this._listeners) t.removeEventListener(...fn)
   }
@@ -202,9 +205,10 @@ export class TreeRenderer {
   // Bake the node sprites in idle time, in small slices, so the first zoom-out
   // (which reveals every node at once) doesn't build ~300 canvases in one frame.
   prewarm() {
-    const later = (fn) => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: 400 }) : setTimeout(fn, 16))
+    const later = (fn) => { this._idle = window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: 400 }) : setTimeout(fn, 16) }
     let i = 0
     const slice = (deadline) => {
+      if (this.destroyed) return
       const t0 = performance.now()
       const spare = () => (deadline?.timeRemaining ? deadline.timeRemaining() > 2 : performance.now() - t0 < 6)
       while (i < this.n && spare()) {
@@ -361,7 +365,7 @@ export class TreeRenderer {
 
   // ── loop ─────────────────────────────────────────────────────────────────
   request() {
-    if (this.raf) return
+    if (this.raf || this.destroyed) return
     this.raf = requestAnimationFrame((t) => { this.raf = 0; this.tick(t) })
   }
 

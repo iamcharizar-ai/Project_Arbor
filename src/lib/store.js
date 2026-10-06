@@ -261,8 +261,7 @@ export function streakDays(s = state) {
 }
 
 // ── mutations ───────────────────────────────────────────────────────────────
-function stamp() {
-  const d = new Date()
+function stamp(d = new Date()) {
   const p = (n) => String(n).padStart(2, '0')
   return { date: dayKey(d), time: `${p(d.getHours())}:${p(d.getMinutes())}` }
 }
@@ -300,7 +299,7 @@ function applyValue(skill, value, { at = new Date().toISOString(), day = dayKey(
   const up = afterRank > RANK[before]
   if (fromVal !== newVal) {
     const line = {
-      ...stamp(), id: skill.id, name: skill.name,
+      ...(remote ? { ...stamp(new Date(at)), date: day } : stamp()), id: skill.id, name: skill.name,
       from: fromVal, to: newVal, unit: skill.unit || 'tier', status: after, up,
     }
     logLines = [...logLines, line].slice(-LOG_CAP)
@@ -357,7 +356,10 @@ function onLedgerEvents(events, boot) {
       if (!skill || r.at) continue
       const value = skill.unit ? r.cur : r.lvl
       if (typeof value !== 'number') continue
-      const ev = ledger.emit('skill', { skillId: id, value, kind: skill.unit ? 'cur' : 'lvl', done: false }, r.asOf || dayKey())
+      // Backdated to the start of its day: this is the bundled seed or an old local value, so any real
+      // event logged elsewhere (even offline, flushed later) must beat it under last-write-wins.
+      const day = r.asOf || dayKey()
+      const ev = ledger.emit('skill', { skillId: id, value, kind: skill.unit ? 'cur' : 'lvl', done: false }, day, `${day}T00:00:00.000Z`)
       state = { ...state, progress: { ...state.progress, [id]: { ...state.progress[id], at: ev.at } } }
       changed = true
     }
