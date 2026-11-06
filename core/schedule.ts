@@ -24,3 +24,13 @@ export const GYM_WEEK: GymDay[] = [
 ]
 
 export const gymDayFor = (day: string): GymDay => GYM_WEEK[new Date(day + 'T12:00:00').getDay()]
+
+/**
+ * The session that is next in the split. Like Strong, it follows the last workout finished and not the calendar, so a missed
+ * day never skips a muscle group. The split runs Monday first; with no workout on record the calendar day stands in.
+ */
+export function nextGymDay(workouts: Record<string, { type: string }>, day: string): GymDay {
+  const cycle = [...GYM_WEEK.slice(1), GYM_WEEK[0]]
+  const last = Object.keys(workouts).sort().reverse().map((d) => cycle.findIndex((g) => g.name === workouts[d].type)).find((i) => i !== -1)
+  return last === undefined ? gymDayFor(day) : cycle[(last + 1) % cycle.length]
+}
