@@ -41,22 +41,6 @@
       }
     },
     {
-      "id": "compression-foundation",
-      "branch": "Physical Foundations",
-      "name": "Compression Foundation",
-      "icon": "🗜️",
-      "kind": "foundation",
-      "req": [
-        "hollow-arch-basics",
-        "pike-compression-stretch"
-      ],
-      "tiers": {
-        "u": "Seated leg lifts ×10",
-        "p": "Pike pulses + active flexibility weekly",
-        "m": "Compression strong enough for L-sit/V-sit work"
-      }
-    },
-    {
       "id": "assisted-pushup",
       "branch": "Horizontal Push",
       "name": "Assisted Push-Up",
@@ -158,7 +142,7 @@
         5
       ],
       "req": [
-        "archer-pushup"
+        "elevated-oap"
       ],
       "note": "Slow 5s lowering, square hips"
     },
@@ -339,23 +323,6 @@
       ]
     },
     {
-      "id": "planche-program-8wk",
-      "branch": "Horizontal Push",
-      "name": "8-Week Planche Block",
-      "icon": "📆",
-      "kind": "milestone",
-      "req": [
-        "pseudo-pushup",
-        "tuck-planche"
-      ],
-      "tiers": {
-        "u": "Block written: days, volume, progressions",
-        "p": "4 weeks in, holds measured weekly",
-        "m": "Block complete — measured gain in tuck hold"
-      },
-      "note": "First measured planche block"
-    },
-    {
       "id": "tuck-planche-pushup",
       "branch": "Horizontal Push",
       "name": "Tuck Planche Push-Up",
@@ -444,7 +411,7 @@
       "req": [
         "ninety-deg-hold"
       ],
-      "note": "2026 goal: 1 clean 90° push-up"
+      "note": "2026 goal: 1 clean 90° push-up. From the 90° hold, press up in the planche position and back down — not the handstand version (that is hspu-90)"
     },
     {
       "id": "full-planche",
@@ -478,22 +445,6 @@
         "full-planche"
       ],
       "note": "Triple-crown piece #1"
-    },
-    {
-      "id": "wide-pushup",
-      "branch": "Horizontal Push",
-      "name": "Wide Push-Up",
-      "icon": "↔️",
-      "unit": "reps",
-      "t": [
-        12,
-        22,
-        40
-      ],
-      "req": [
-        "pushup"
-      ],
-      "note": "Wider grip, arms still <45° from torso — pec emphasis"
     },
     {
       "id": "uneven-pushup",
@@ -624,22 +575,6 @@
       "note": "Feet-supported entry to the dip pattern"
     },
     {
-      "id": "bulgarian-dip",
-      "branch": "Horizontal Push",
-      "name": "Bulgarian Dip",
-      "icon": "🦇",
-      "unit": "reps",
-      "t": [
-        5,
-        10,
-        16
-      ],
-      "req": [
-        "dip"
-      ],
-      "note": "Wide arms, 90° at the bottom — rear delt / lat emphasis"
-    },
-    {
       "id": "chest-dip",
       "branch": "Horizontal Push",
       "name": "Chest Dip",
@@ -701,7 +636,8 @@
         12
       ],
       "req": [
-        "rto-support-hold"
+        "rto-support-hold",
+        "ring-dip"
       ],
       "note": "Rings-turned-out dip — needs skin-the-cat-level shoulder mobility first"
     },
@@ -832,7 +768,7 @@
     },
     {
       "id": "iron-cross-fly",
-      "branch": "Horizontal Push",
+      "branch": "Vertical Pull",
       "name": "Iron Cross Fly",
       "icon": "➕",
       "kind": "bridge",
@@ -849,7 +785,7 @@
     },
     {
       "id": "straight-arm-rto-dip",
-      "branch": "Horizontal Push",
+      "branch": "Vertical Pull",
       "name": "Iron Cross Dip",
       "icon": "✝️",
       "kind": "bridge",
@@ -866,7 +802,7 @@
     },
     {
       "id": "iron-cross",
-      "branch": "Horizontal Push",
+      "branch": "Vertical Pull",
       "name": "Iron Cross",
       "icon": "🎖️",
       "star": true,
@@ -902,7 +838,7 @@
     },
     {
       "id": "pelican-curl",
-      "branch": "Horizontal Push",
+      "branch": "Vertical Pull",
       "name": "Pelican Curl",
       "icon": "🦤",
       "kind": "bridge",
@@ -913,13 +849,14 @@
         12
       ],
       "req": [
-        "rto-support-hold"
+        "rto-support-hold",
+        "korean-dip"
       ],
       "note": "Pseudo-hefesto — deep straight-ish-arm ring curl"
     },
     {
       "id": "hefesto",
-      "branch": "Horizontal Push",
+      "branch": "Vertical Pull",
       "name": "Hefesto",
       "icon": "🔨",
       "star": true,
@@ -930,7 +867,8 @@
         4
       ],
       "req": [
-        "pelican-curl"
+        "pelican-curl",
+        "full-bl"
       ],
       "note": "Behind-the-back ring curl — elite bicep/elbow strength"
     },
@@ -966,7 +904,7 @@
     },
     {
       "id": "crow-pose",
-      "branch": "Vertical Push",
+      "branch": "Arm Balances",
       "name": "Crow Pose",
       "icon": "🐦‍⬛",
       "unit": "sec",
@@ -992,7 +930,7 @@
         60
       ],
       "req": [
-        "crow-pose"
+        "pike-pushup"
       ]
     },
     {
@@ -1099,15 +1037,15 @@
       "star": true,
       "unit": "sec",
       "t": [
-        5,
         10,
-        20
+        30,
+        60
       ],
       "req": [
         "toe-pulls",
         "freestanding-kickups"
       ],
-      "note": "Prime goal. 2026: 10s ⭐, then 20s. Balance drills first, not just wall time."
+      "note": "Prime goal. 2026: 10s ⭐ (now the unlock), then 30s. 60s is the usual gate before one-arm work. Balance drills first, not just wall time."
     },
     {
       "id": "assisted-hspu",
@@ -1137,8 +1075,7 @@
         10
       ],
       "req": [
-        "assisted-hspu",
-        "handstand"
+        "assisted-hspu"
       ]
     },
     {
@@ -1153,7 +1090,8 @@
         5
       ],
       "req": [
-        "hspu"
+        "hspu",
+        "handstand"
       ]
     },
     {
@@ -1169,7 +1107,8 @@
       ],
       "req": [
         "handstand",
-        "pancake"
+        "pancake",
+        "straddle-press-negative"
       ],
       "note": "Straddle press. Needs pancake flexibility (Mobility realm)."
     },
@@ -1186,8 +1125,7 @@
         15
       ],
       "req": [
-        "press-to-handstand",
-        "freestanding-hspu"
+        "straddle-oahs"
       ],
       "note": "Dream tier — years-long project"
     },
@@ -1379,7 +1317,7 @@
     },
     {
       "id": "hanging-leg-raise",
-      "branch": "Vertical Pull",
+      "branch": "Core",
       "name": "Hanging Leg Raise",
       "icon": "🦵",
       "unit": "reps",
@@ -1394,7 +1332,7 @@
     },
     {
       "id": "toes-to-bar",
-      "branch": "Vertical Pull",
+      "branch": "Core",
       "name": "Toes to Bar",
       "icon": "🛝",
       "unit": "reps",
@@ -1729,7 +1667,7 @@
         8
       ],
       "req": [
-        "tuck-human-flag"
+        "adv-tuck-human-flag"
       ]
     },
     {
@@ -1842,22 +1780,6 @@
       ]
     },
     {
-      "id": "bulgarian-row",
-      "branch": "Horizontal Pull",
-      "name": "Bulgarian Row",
-      "icon": "🦇",
-      "unit": "reps",
-      "t": [
-        6,
-        12,
-        20
-      ],
-      "req": [
-        "inverted-row"
-      ],
-      "note": "Wide 90°/90° grip — rear-delt emphasis"
-    },
-    {
       "id": "one-arm-inverted-row",
       "branch": "Horizontal Pull",
       "name": "One-Arm Inverted Row",
@@ -1869,7 +1791,7 @@
         14
       ],
       "req": [
-        "inverted-row"
+        "archer-row"
       ],
       "note": "Torso square to the ring tension — unilateral horizontal pull"
     },
@@ -1949,6 +1871,7 @@
         15
       ],
       "req": [
+        "adv-tuck-fl",
         "single-leg-tuck-fl"
       ]
     },
@@ -1965,7 +1888,7 @@
       ],
       "req": [
         "tuck-fl-row",
-        "adv-single-leg-tuck-fl"
+        "adv-tuck-fl"
       ]
     },
     {
@@ -2112,24 +2035,6 @@
       "note": "Dream tier — front-lever body held flat at ring height"
     },
     {
-      "id": "back-lever-skin-cat-volume",
-      "branch": "Horizontal Pull",
-      "name": "Skin-the-Cat Volume",
-      "icon": "🐈‍⬛",
-      "kind": "bridge",
-      "unit": "reps",
-      "t": [
-        3,
-        6,
-        10
-      ],
-      "req": [
-        "skin-the-cat",
-        "bridge-wheel"
-      ],
-      "note": "Shoulder-prep volume before back lever loading"
-    },
-    {
       "id": "tuck-bl",
       "branch": "Horizontal Pull",
       "name": "Tuck Back Lever",
@@ -2141,7 +2046,7 @@
         15
       ],
       "req": [
-        "back-lever-skin-cat-volume"
+        "skin-the-cat"
       ],
       "note": "2026 goal: 15s"
     },
@@ -2378,9 +2283,9 @@
       "icon": "🥕",
       "unit": "sec",
       "t": [
-        1,
         2,
-        3
+        5,
+        10
       ],
       "req": [
         "tucked-vsit"
@@ -2398,7 +2303,7 @@
         5
       ],
       "req": [
-        "v-sit"
+        "high-v-sit"
       ],
       "note": "Hips shifting behind the hands, knees tucked"
     },
@@ -2509,7 +2414,7 @@
         12
       ],
       "req": [
-        "dragon-flag"
+        "toes-to-bar"
       ],
       "note": "Hanging, legs together, side to side"
     },
@@ -2525,7 +2430,7 @@
         5
       ],
       "req": [
-        "hollow-body"
+        "ab-rollout-negative"
       ],
       "note": "2026 goal: 5 full standing rollouts"
     },
@@ -2578,14 +2483,14 @@
     {
       "id": "single-leg-balance",
       "branch": "Legs",
-      "name": "Single-Leg Balance",
+      "name": "Single-Leg Balance (Eyes Closed)",
       "icon": "🦩",
       "kind": "bridge",
       "unit": "sec",
       "t": [
-        30,
-        45,
-        60
+        10,
+        20,
+        30
       ],
       "req": [
         "split-squat"
@@ -2665,7 +2570,7 @@
         12
       ],
       "req": [
-        "split-squat"
+        "bulgarian-split-squat"
       ],
       "note": "2026 goal: 12 ⭐"
     },
@@ -2683,7 +2588,8 @@
       ],
       "req": [
         "single-leg-balance",
-        "cossack-squat"
+        "cossack-squat",
+        "ankle-mobility-squat"
       ],
       "note": "Controlled lower to a box — the pistol bridge"
     },
@@ -2839,8 +2745,9 @@
         10
       ],
       "req": [
-        "sissy-squat",
-        "nordic-anchor-setup"
+        "nordic-anchor-setup",
+        "single-leg-rdl",
+        "hamstring-slide"
       ],
       "note": "Controlled 5s lowering"
     },
@@ -2941,7 +2848,8 @@
       "name": "Back Hip Circle",
       "icon": "",
       "req": [
-        "pullover"
+        "pullover",
+        "cast"
       ],
       "tiers": {
         "u": "Cast and circle with bent arms or a spot",
@@ -3089,7 +2997,8 @@
       "icon": "",
       "req": [
         "bar-kip",
-        "back-hip-circle"
+        "back-hip-circle",
+        "cast"
       ],
       "tiers": {
         "u": "Cast to horizontal and swing down under control",
@@ -3159,18 +3068,335 @@
     {
       "id": "geinger",
       "branch": "Bar Dynamics",
-      "name": "Geinger",
+      "name": "Gienger",
       "icon": "",
       "req": [
         "giant",
-        "flyaway",
-        "swing-360"
+        "flyaway"
       ],
       "tiers": {
         "u": "Drilled into a pit with a spot",
         "p": "Release, half turn, regrasp",
         "m": "Linked out of a giant"
       }
+    },
+    {
+      "id": "adv-tuck-fl",
+      "branch": "Horizontal Pull",
+      "name": "Adv. Tuck Front Lever",
+      "req": [
+        "tuck-fl"
+      ],
+      "unit": "sec",
+      "t": [
+        5,
+        10,
+        15
+      ],
+      "note": "Back flat, hips open to 90° — the standard step after the tuck"
+    },
+    {
+      "id": "ring-dip",
+      "branch": "Horizontal Push",
+      "name": "Ring Dip",
+      "req": [
+        "dip",
+        "support-hold"
+      ],
+      "unit": "reps",
+      "t": [
+        3,
+        8,
+        12
+      ],
+      "note": "Rings not turned out. Bar dips 3×8 first; the step before RTO dips"
+    },
+    {
+      "id": "elevated-oap",
+      "branch": "Horizontal Push",
+      "name": "Elevated One-Arm Push-Up",
+      "req": [
+        "archer-pushup"
+      ],
+      "unit": "reps",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "note": "Hand on a bench or box; lower the surface as it gets easier"
+    },
+    {
+      "id": "straddle-press-negative",
+      "branch": "Vertical Push",
+      "name": "Straddle Press Negative",
+      "req": [
+        "handstand"
+      ],
+      "unit": "reps",
+      "t": [
+        1,
+        3,
+        5
+      ],
+      "note": "Lower from handstand to straddle stand under control; then elevated presses from a box"
+    },
+    {
+      "id": "straddle-oahs",
+      "branch": "Vertical Push",
+      "name": "Straddle One-Arm Handstand",
+      "req": [
+        "handstand"
+      ],
+      "unit": "sec",
+      "t": [
+        2,
+        5,
+        10
+      ],
+      "note": "Straddle weight shift → fingertip assist → free straddle OAHS. Legs-together comes much later"
+    },
+    {
+      "id": "handstand-walk",
+      "branch": "Vertical Push",
+      "name": "Handstand Walk",
+      "req": [
+        "freestanding-kickups"
+      ],
+      "unit": "m",
+      "t": [
+        5,
+        10,
+        20
+      ],
+      "note": "Controlled steps, shoulders open, no running to save it"
+    },
+    {
+      "id": "ring-muscle-up",
+      "branch": "Vertical Pull",
+      "name": "Ring Muscle-Up",
+      "req": [
+        "false-grip-transition",
+        "ring-dip",
+        "chest-pullup"
+      ],
+      "unit": "reps",
+      "t": [
+        1,
+        3,
+        5
+      ],
+      "note": "False grip held through the transition — no regrip, unlike the bar"
+    },
+    {
+      "id": "adv-tuck-human-flag",
+      "branch": "Vertical Pull",
+      "name": "Adv. Tuck Human Flag",
+      "req": [
+        "tuck-human-flag"
+      ],
+      "unit": "sec",
+      "t": [
+        2,
+        5,
+        8
+      ],
+      "note": "Hips open, knees tucked — between tuck and straddle"
+    },
+    {
+      "id": "archer-row",
+      "branch": "Horizontal Pull",
+      "name": "Archer Row",
+      "req": [
+        "inverted-row"
+      ],
+      "unit": "reps",
+      "t": [
+        4,
+        8,
+        12
+      ],
+      "note": "Reps per side; the bridge to the one-arm row"
+    },
+    {
+      "id": "kneeling-ab-rollout",
+      "branch": "Core",
+      "name": "Kneeling Ab Rollout",
+      "req": [
+        "plank"
+      ],
+      "unit": "reps",
+      "t": [
+        5,
+        10,
+        15
+      ],
+      "note": "Full extension from the knees, hips never sag"
+    },
+    {
+      "id": "ab-rollout-negative",
+      "branch": "Core",
+      "name": "Standing Rollout Negative",
+      "req": [
+        "kneeling-ab-rollout",
+        "hollow-body"
+      ],
+      "unit": "reps",
+      "t": [
+        1,
+        3,
+        5
+      ],
+      "note": "Roll out from standing to the floor under control, or rollouts up a ramp"
+    },
+    {
+      "id": "high-v-sit",
+      "branch": "Core",
+      "name": "High V-Sit",
+      "req": [
+        "v-sit"
+      ],
+      "unit": "sec",
+      "t": [
+        2,
+        5,
+        10
+      ],
+      "note": "Legs well past vertical toward the face, hands still in front — the bridge to manna"
+    },
+    {
+      "id": "bulgarian-split-squat",
+      "branch": "Legs",
+      "name": "Bulgarian Split Squat",
+      "req": [
+        "split-squat"
+      ],
+      "unit": "reps",
+      "t": [
+        5,
+        8,
+        12
+      ],
+      "note": "Rear foot elevated, reps per leg. 3×8 before shrimp work"
+    },
+    {
+      "id": "single-leg-glute-bridge",
+      "branch": "Legs",
+      "name": "Single-Leg Glute Bridge",
+      "kind": "foundation",
+      "req": [],
+      "unit": "reps",
+      "t": [
+        10,
+        15,
+        25
+      ],
+      "note": "Reps per side, hips level, full hip extension at the top"
+    },
+    {
+      "id": "hamstring-slide",
+      "branch": "Legs",
+      "name": "Hamstring Slide",
+      "req": [
+        "single-leg-glute-bridge"
+      ],
+      "unit": "reps",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "note": "From the bridge top, slide the heels out on socks/sliders. Eccentric first, then full, then single-leg"
+    },
+    {
+      "id": "single-leg-rdl",
+      "branch": "Legs",
+      "name": "Single-Leg Romanian Deadlift",
+      "req": [
+        "single-leg-balance"
+      ],
+      "unit": "reps",
+      "t": [
+        5,
+        8,
+        12
+      ],
+      "note": "Bodyweight hinge, reps per leg, back flat, hips square"
+    },
+    {
+      "id": "vertical-jump",
+      "branch": "Legs",
+      "name": "Vertical Jump",
+      "req": [
+        "safe-landing",
+        "bw-squat"
+      ],
+      "unit": "cm",
+      "t": [
+        41,
+        49,
+        57
+      ],
+      "note": "Standing jump-and-reach height. Thresholds = adult male 25th/50th/75th percentile"
+    },
+    {
+      "id": "broad-jump",
+      "branch": "Legs",
+      "name": "Standing Broad Jump",
+      "req": [
+        "safe-landing",
+        "bw-squat"
+      ],
+      "unit": "cm",
+      "t": [
+        190,
+        210,
+        235
+      ],
+      "note": "Two-foot takeoff, stuck landing — no step back counts"
+    },
+    {
+      "id": "depth-jump",
+      "branch": "Legs",
+      "name": "Depth Jump",
+      "req": [
+        "vertical-jump",
+        "broad-jump"
+      ],
+      "tiers": {
+        "u": "Step off a 30 cm box, stick the landing quietly",
+        "p": "Step off 30 cm and rebound straight up, short ground contact",
+        "m": "Rebound off 45 cm, jump height no lower than your standing jump"
+      },
+      "note": "Highest-intensity plyometric — last in the ladder, low boxes only"
+    },
+    {
+      "id": "copenhagen-plank",
+      "branch": "Legs",
+      "name": "Copenhagen Plank",
+      "req": [
+        "side-plank"
+      ],
+      "tiers": {
+        "u": "Short lever (knee on the bench) 3×10 s each side",
+        "p": "Long lever (foot on the bench) 3×10 s each side",
+        "m": "Long-lever dynamic reps, 8 each side"
+      },
+      "note": "Adductor strength; groin-injury prevention"
+    },
+    {
+      "id": "cast",
+      "branch": "Bar Dynamics",
+      "name": "Cast",
+      "req": [
+        "pullover"
+      ],
+      "tiers": {
+        "u": "Hips push off the bar from front support and return",
+        "p": "Cast to horizontal, straight arms",
+        "m": "Cast above horizontal"
+      },
+      "note": "Starts back hip circles and every giant"
     }
   ]
 }

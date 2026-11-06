@@ -323,32 +323,18 @@
       }
     },
     {
-      "id": "no-handed-cartwheel",
+      "id": "aerial-drills",
       "branch": "Flips & Twists",
-      "name": "No-Handed Cartwheel",
-      "icon": "🍃",
+      "name": "Aerial Lead-Ups",
+      "icon": "🛫",
+      "kind": "bridge",
       "req": [
         "cartwheel-pop"
       ],
       "tiers": {
-        "u": "First clean rep",
-        "p": "3 in a row",
-        "m": "Clean in a filmed reel"
-      }
-    },
-    {
-      "id": "aerial-drills",
-      "branch": "Flips & Twists",
-      "name": "Aerial Drills",
-      "icon": "🛫",
-      "kind": "bridge",
-      "req": [
-        "no-handed-cartwheel"
-      ],
-      "tiers": {
-        "u": "One-hand + dive cartwheel drills",
-        "p": "Takeoff drills with real block/lift",
-        "m": "Every drill in the aerial toolbox owned"
+        "u": "One-handed cartwheel, both sides",
+        "p": "Aerial off a raised panel mat or downhill, unspotted",
+        "m": "Raised-surface aerial lands every time — ready for flat ground"
       }
     },
     {
@@ -371,7 +357,8 @@
       "name": "Macaco",
       "icon": "🐒",
       "req": [
-        "kip-up"
+        "bridge-wheel",
+        "cartwheel"
       ],
       "tiers": {
         "u": "First macaco (capoeira back-sweep)",
@@ -385,7 +372,8 @@
       "name": "Raiz",
       "icon": "🌱",
       "req": [
-        "aerial"
+        "tornado-kick",
+        "cartwheel"
       ],
       "tiers": {
         "u": "First landed raiz",
@@ -400,7 +388,8 @@
       "name": "Back Handspring",
       "icon": "🤾",
       "req": [
-        "roundoff"
+        "roundoff",
+        "bridge-kickover"
       ],
       "tiers": {
         "u": "First spotted/soft-ground rep",
@@ -433,7 +422,8 @@
       "name": "Front Flip",
       "icon": "🎢",
       "req": [
-        "backflip"
+        "front-handspring",
+        "jump-tuck-landing"
       ],
       "tiers": {
         "u": "First landed front tuck",
@@ -504,7 +494,7 @@
       "name": "Butterfly Kick",
       "icon": "🦋",
       "req": [
-        "aerial"
+        "crescent-kick"
       ],
       "tiers": {
         "u": "First clean b-kick",
@@ -518,7 +508,7 @@
       "name": "Moon Kick",
       "icon": "🌜",
       "req": [
-        "butterfly-kick"
+        "gainer"
       ],
       "tiers": {
         "u": "First recognizable attempt landed",
@@ -547,8 +537,8 @@
       "name": "Corkscrew",
       "icon": "🥂",
       "req": [
-        "aerial",
-        "backflip"
+        "cheat-gainer",
+        "b-twist"
       ],
       "tiers": {
         "u": "First landed cork (spotted)",
@@ -725,8 +715,8 @@
       "name": "Flare",
       "icon": "🧨",
       "req": [
-        "windmills",
-        "full-planche"
+        "v-sit",
+        "double-leg-circles"
       ],
       "tiers": {
         "u": "One full flare rotation",
@@ -755,8 +745,7 @@
       "name": "1990 (One-Hand Spin)",
       "icon": "☝️",
       "req": [
-        "backspin",
-        "one-arm-handstand"
+        "two-thousand"
       ],
       "tiers": {
         "u": "One rotation on one hand",
@@ -791,7 +780,8 @@
       "req": [
         "six-step",
         "windmills",
-        "freeze-basics"
+        "freeze-basics",
+        "go-downs"
       ],
       "tiers": {
         "u": "Combo designed: entry, footwork, power, freeze, exit",
@@ -844,7 +834,7 @@
       "name": "Moonwalk",
       "icon": "🌕",
       "req": [
-        "body-wave"
+        "side-glide"
       ],
       "tiers": {
         "u": "Basic backslide, 2 metres",
@@ -882,6 +872,265 @@
         "p": "A 15s illusion routine",
         "m": "Filmed — the floor looks frictionless"
       }
+    },
+    {
+      "id": "bridge-kickover",
+      "branch": "Acrobatics Foundations",
+      "name": "Bridge Kickover",
+      "req": [
+        "bridge-wheel"
+      ],
+      "tiers": {
+        "u": "Kickover from bridge with a spot or off a raised surface",
+        "p": "From a bridge on flat ground, one leg leads over",
+        "m": "Handstand down to bridge, kick back over"
+      }
+    },
+    {
+      "id": "back-walkover",
+      "branch": "Acrobatics Foundations",
+      "name": "Back Walkover",
+      "req": [
+        "bridge-kickover",
+        "wall-handstand"
+      ],
+      "tiers": {
+        "u": "Back walkover with a spot",
+        "p": "Unspotted, legs split through handstand",
+        "m": "Connected, straight arms, filmed"
+      }
+    },
+    {
+      "id": "front-handspring",
+      "branch": "Acrobatics Foundations",
+      "name": "Front Handspring",
+      "req": [
+        "cartwheel",
+        "wall-handstand"
+      ],
+      "tiers": {
+        "u": "Front handspring over a block or with a spot",
+        "p": "Front handspring step-out on flat ground",
+        "m": "Two-foot landing, rebound ready for a front tuck"
+      }
+    },
+    {
+      "id": "cheat-gainer",
+      "branch": "Flips & Twists",
+      "name": "Cheat Gainer",
+      "req": [
+        "trampoline-spotting",
+        "tornado-kick"
+      ],
+      "tiers": {
+        "u": "First landed cheat gainer (spotted / soft ground)",
+        "p": "3 in a row unassisted",
+        "m": "Clean in a filmed line"
+      },
+      "note": "The cork's real entry: one-foot takeoff out of a cheat"
+    },
+    {
+      "id": "two-thousand",
+      "branch": "Breaking",
+      "name": "2000 (Stacked-Hand Spin)",
+      "req": [
+        "handstand"
+      ],
+      "tiers": {
+        "u": "One rotation with hands stacked",
+        "p": "3 continuous rotations",
+        "m": "In a power-move set, filmed"
+      }
+    },
+    {
+      "id": "double-leg-circles",
+      "branch": "Breaking",
+      "name": "Double-Leg Circles",
+      "req": [
+        "lsit"
+      ],
+      "tiers": {
+        "u": "Circles on a mushroom or floor with a spot",
+        "p": "5 continuous circles",
+        "m": "Circles with the legs straddling — the flare's base"
+      }
+    },
+    {
+      "id": "go-downs",
+      "branch": "Breaking",
+      "name": "Go-Downs",
+      "req": [
+        "toprock"
+      ],
+      "tiers": {
+        "u": "One go-down from toprock into footwork",
+        "p": "Three different go-downs on the beat",
+        "m": "Go-downs flow straight into footwork in a round"
+      },
+      "note": "Drops from toprock to the floor (knee drop, sweep, baseball slide)"
+    },
+    {
+      "id": "popping-hit",
+      "branch": "Dance",
+      "name": "Hit (Pop)",
+      "req": [
+        "dance-musicality"
+      ],
+      "tiers": {
+        "u": "Clean arm and chest hits on the beat",
+        "p": "Hits through the whole body, on 1 and 3 or every beat",
+        "m": "Hits land exactly on the music at any tempo"
+      },
+      "note": "The foundation popping is built on"
+    },
+    {
+      "id": "side-glide",
+      "branch": "Dance",
+      "name": "Side Glide",
+      "req": [],
+      "tiers": {
+        "u": "Side glide one direction, 2 m",
+        "p": "Both directions, smooth to music",
+        "m": "In a filmed reel"
+      }
+    },
+    {
+      "id": "touchdown-raiz",
+      "branch": "Flips & Twists",
+      "name": "Touchdown Raiz",
+      "req": [
+        "raiz"
+      ],
+      "tiers": {
+        "u": "First touchdown raiz, hand down, landed",
+        "p": "3 in a row",
+        "m": "Used as a setup into another trick, filmed"
+      },
+      "note": "TDR — the raiz with a hand touch; a setup for advanced outside tricks"
+    },
+    {
+      "id": "sideswipe",
+      "branch": "Flips & Twists",
+      "name": "Sideswipe",
+      "req": [
+        "tornado-kick",
+        "cartwheel"
+      ],
+      "tiers": {
+        "u": "First landed sideswipe (soft ground)",
+        "p": "3 in a row",
+        "m": "Clean in a filmed line"
+      },
+      "note": "Beginner-tier invert-kick trick"
+    },
+    {
+      "id": "double-leg",
+      "branch": "Flips & Twists",
+      "name": "Double Leg",
+      "req": [
+        "raiz",
+        "tornado-kick"
+      ],
+      "tiers": {
+        "u": "First landed double leg",
+        "p": "3 in a row",
+        "m": "Clean in a filmed line"
+      },
+      "note": "Capoeira armada dupla — both legs kick through a spinning takeoff; base of the cheat 720 double leg"
+    },
+    {
+      "id": "trick-combo",
+      "branch": "Flips & Twists",
+      "name": "First Linked Combo",
+      "req": [
+        "cheat-540",
+        "butterfly-kick"
+      ],
+      "tiers": {
+        "u": "Two tricks linked by a swingthrough or vanish, no reset step",
+        "p": "Three tricks linked, same direction",
+        "m": "Filmed combo of four or more using two different transitions"
+      }
+    },
+    {
+      "id": "turtles",
+      "branch": "Breaking",
+      "name": "Turtles",
+      "req": [
+        "freeze-basics"
+      ],
+      "tiers": {
+        "u": "Turtle freeze walked through a half rotation",
+        "p": "One full rotation on the hands",
+        "m": "3 continuous rotations"
+      }
+    },
+    {
+      "id": "crickets",
+      "branch": "Breaking",
+      "name": "Crickets",
+      "req": [
+        "turtles"
+      ],
+      "tiers": {
+        "u": "Float held, first hand-to-hand turns",
+        "p": "One full rotation",
+        "m": "3 continuous rotations"
+      }
+    },
+    {
+      "id": "jackhammer",
+      "branch": "Breaking",
+      "name": "Jackhammer",
+      "req": [
+        "crickets"
+      ],
+      "tiers": {
+        "u": "First one-hand hop rotation",
+        "p": "One full rotation on one hand",
+        "m": "3 continuous rotations, filmed"
+      }
+    },
+    {
+      "id": "lock-point",
+      "branch": "Dance",
+      "name": "Lock & Point",
+      "req": [
+        "dance-musicality"
+      ],
+      "tiers": {
+        "u": "Clean lock (the uplock) and point on the beat",
+        "p": "Lock-point combos for 8 counts both sides",
+        "m": "Locks and points hit with character in a freestyle, filmed"
+      },
+      "note": "Don Campbell's fundamentals of locking"
+    },
+    {
+      "id": "wrist-roll",
+      "branch": "Dance",
+      "name": "Wrist Roll",
+      "req": [
+        "lock-point"
+      ],
+      "tiers": {
+        "u": "Wrist rolls travelling up the body",
+        "p": "Wrist roll into a point on the beat",
+        "m": "Rolls used as accents in a locking routine"
+      }
+    },
+    {
+      "id": "scooby-doo",
+      "branch": "Dance",
+      "name": "Scooby Doo",
+      "req": [
+        "lock-point"
+      ],
+      "tiers": {
+        "u": "Muscle-man lock then two kicks, slow",
+        "p": "On the beat, both sides",
+        "m": "In a locking routine, filmed"
+      },
+      "note": "Credited to Jimmy \"Scoo B Doo\" Foster"
     }
   ]
 }

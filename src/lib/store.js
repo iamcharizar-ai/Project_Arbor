@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { BUNDLED } from './bundledTree.js'
 import { createLedger } from '../../core/ledger.ts'
+import { canonicalId } from '../../core/model.ts'
 
 // Local-first store. Progress + the PR log live in localStorage so the app
 // works offline. When the shared ledger is configured (VITE_SUPABASE_*), every
@@ -336,7 +337,7 @@ function onLedgerEvents(events, boot) {
   let changed = false
   for (const ev of events) {
     const p = ev.payload || {}
-    const skill = BY_ID.get(String(p.skillId || ''))
+    const skill = BY_ID.get(canonicalId(String(p.skillId || '')))
     if (!skill) continue
     const r = rec(skill.id)
     if (typeof p.value === 'number') {

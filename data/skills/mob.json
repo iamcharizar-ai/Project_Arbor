@@ -85,27 +85,12 @@
       }
     },
     {
-      "id": "shoulder-mobility-drills",
-      "branch": "Mobility Foundations",
-      "name": "Shoulder Mobility Drills",
-      "icon": "🙆",
-      "kind": "foundation",
-      "req": [
-        "active-flexibility-basics"
-      ],
-      "tiers": {
-        "u": "Behind-back + prone overhead raises tried",
-        "p": "Both in the weekly routine, range increasing",
-        "m": "Shoulders open enough that flexion drills feel easy"
-      }
-    },
-    {
       "id": "shoulder-dislocates",
       "branch": "Mobility Foundations",
       "name": "Shoulder Dislocates",
       "icon": "🔄",
       "req": [
-        "shoulder-mobility-drills"
+        "shoulder-flexion"
       ],
       "unit": "reps",
       "t": [
@@ -144,7 +129,7 @@
         30
       ],
       "req": [],
-      "note": "Standing forward fold — the hamstring baseline before loaded pike work"
+      "note": "Standing forward fold. Seconds count only with palms flat on the floor, knees straight"
     },
     {
       "id": "plow-pose",
@@ -205,7 +190,8 @@
       ],
       "req": [
         "hamstring-loaded-pike"
-      ]
+      ],
+      "note": "Seconds count only with the chest on the thighs, knees straight"
     },
     {
       "id": "pancake",
@@ -222,7 +208,7 @@
       "req": [
         "pike-compression-stretch"
       ],
-      "note": "2026 goal: 30s ⭐. Unlocks press-to-handstand."
+      "note": "2026 goal: 30s ⭐. Seconds count only with the chest on the floor and the back flat. Unlocks press-to-handstand."
     },
     {
       "id": "middle-split-strength",
@@ -231,7 +217,7 @@
       "icon": "🐴",
       "kind": "bridge",
       "req": [
-        "pancake"
+        "hip-rotation"
       ],
       "tiers": {
         "u": "Horse stance 60s",
@@ -252,7 +238,8 @@
       ],
       "req": [
         "middle-split-strength"
-      ]
+      ],
+      "note": "Seconds count only with the hips on the floor, no hands holding you up"
     },
     {
       "id": "front-split-strength",
@@ -261,7 +248,8 @@
       "icon": "🦵",
       "kind": "bridge",
       "req": [
-        "pike-compression-stretch"
+        "pike-compression-stretch",
+        "couch-stretch"
       ],
       "tiers": {
         "u": "Hip flexor + hamstring active control drills",
@@ -283,7 +271,7 @@
       "req": [
         "front-split-strength"
       ],
-      "note": "= Hanumanasana"
+      "note": "= Hanumanasana. Seconds count only with the hips on the floor and square, each side"
     },
     {
       "id": "standing-split",
@@ -298,7 +286,8 @@
       ],
       "req": [
         "front-split"
-      ]
+      ],
+      "note": "Seconds count only with hands on the floor and the raised leg at 160° or more"
     },
     {
       "id": "leg-behind-neck",
@@ -336,7 +325,8 @@
       "kind": "bridge",
       "req": [
         "camel-pose",
-        "joint-prep-wrists"
+        "joint-prep-wrists",
+        "shoulder-flexion"
       ],
       "tiers": {
         "u": "Wrists, shoulders, thoracic, glutes each prepped",
@@ -358,7 +348,7 @@
       "req": [
         "bridge-prep"
       ],
-      "note": "Urdhva Dhanurasana — full backbend"
+      "note": "Urdhva Dhanurasana. Seconds count only with straight arms and shoulders stacked over the wrists"
     },
     {
       "id": "lotus-prep",
@@ -413,7 +403,7 @@
       "kind": "foundation",
       "req": [
         "wrist-loading-yoga",
-        "compression-foundation"
+        "lsit-compression"
       ],
       "tiers": {
         "u": "Knees-to-chest compression drills",
@@ -427,9 +417,7 @@
       "name": "Twist Mobility",
       "icon": "🌪️",
       "kind": "foundation",
-      "req": [
-        "wrist-loading-yoga"
-      ],
+      "req": [],
       "tiers": {
         "u": "Seated + revolved twists daily",
         "p": "Deep twist with straight spine both sides",
@@ -479,7 +467,7 @@
         10
       ],
       "req": [
-        "one-legged-crow"
+        "crow-pose"
       ]
     },
     {
@@ -558,7 +546,7 @@
         10
       ],
       "req": [
-        "side-crow",
+        "bhujapidasana",
         "hip-compression-arm-balance"
       ]
     },
@@ -589,7 +577,8 @@
         15
       ],
       "req": [
-        "crane-pose"
+        "elbow-lever",
+        "wrist-loading-yoga"
       ]
     },
     {
@@ -623,34 +612,6 @@
       "note": "Vrikasana"
     },
     {
-      "id": "warrior-ii",
-      "branch": "Yoga Holds",
-      "name": "Warrior II",
-      "icon": "🗡️",
-      "unit": "sec",
-      "t": [
-        15,
-        30,
-        60
-      ],
-      "req": [],
-      "note": "Virabhadrasana II"
-    },
-    {
-      "id": "chair-pose",
-      "branch": "Yoga Holds",
-      "name": "Chair Pose",
-      "icon": "🪑",
-      "unit": "sec",
-      "t": [
-        15,
-        30,
-        60
-      ],
-      "req": [],
-      "note": "Utkatasana"
-    },
-    {
       "id": "boat-pose",
       "branch": "Yoga Holds",
       "name": "Boat Pose",
@@ -676,7 +637,8 @@
         30
       ],
       "req": [
-        "tree-pose"
+        "tree-pose",
+        "bow-pose"
       ]
     },
     {
@@ -707,7 +669,8 @@
         20
       ],
       "req": [
-        "king-dance"
+        "pigeon-stretch",
+        "camel-pose"
       ]
     },
     {
@@ -771,9 +734,64 @@
         10
       ],
       "req": [
-        "scorpion-pose"
+        "scorpion-pose",
+        "handstand"
       ],
       "note": "Dream tier — scorpion in a handstand"
+    },
+    {
+      "id": "couch-stretch",
+      "branch": "Flexibility",
+      "name": "Couch Stretch",
+      "req": [],
+      "tiers": {
+        "u": "Rear knee at the wall, shin up it, front foot down",
+        "p": "Torso upright, glute squeezed, no low-back arch",
+        "m": "Upright with the hips fully open — hip flexors never limit a split"
+      },
+      "note": "Hip-flexor length the front split needs; the pike work only covers hamstrings"
+    },
+    {
+      "id": "wheel-dropback",
+      "branch": "Flexibility",
+      "name": "Drop-Back to Wheel",
+      "req": [
+        "bridge-wheel"
+      ],
+      "tiers": {
+        "u": "Walk down a wall into wheel",
+        "p": "Drop back from standing to wheel, unspotted",
+        "m": "Drop back and stand back up"
+      }
+    },
+    {
+      "id": "bow-pose",
+      "branch": "Yoga Holds",
+      "name": "Bow Pose",
+      "req": [],
+      "unit": "sec",
+      "t": [
+        15,
+        30,
+        45
+      ],
+      "note": "Dhanurasana — ankles held, thighs and chest off the floor"
+    },
+    {
+      "id": "bhujapidasana",
+      "branch": "Arm Balances",
+      "name": "Shoulder-Press Pose",
+      "req": [
+        "hip-compression-arm-balance",
+        "wrist-loading-yoga"
+      ],
+      "unit": "sec",
+      "t": [
+        3,
+        6,
+        10
+      ],
+      "note": "Bhujapidasana — thighs on the upper arms, ankles crossed; the entry to firefly"
     }
   ]
 }
