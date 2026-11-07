@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/ai/:token", "destination": "https://redesign-life-os-ui.vercel.app/api/ai/:token?sections=arbor,workouts" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
