@@ -328,6 +328,18 @@ export function setValue(skill, value) {
   ledger.emit('skill', { skillId: skill.id, value: newVal, kind: skill.unit ? 'cur' : 'lvl' })
 }
 
+/**
+ * Practised today without beating the current value (a workout set below your
+ * best). Keeps the number as it is; the skill still counts as "touched" locally
+ * and in the ledger, so staleness and Life OS's practice rotation see it.
+ */
+export function markPracticed(skill) {
+  state = { ...state, progress: { ...state.progress, [skill.id]: { ...rec(skill.id), asOf: dayKey() } } }
+  persist()
+  bus.emit()
+  ledger.emit('skill', { skillId: skill.id, done: true })
+}
+
 // ── shared ledger ───────────────────────────────────────────────────────────
 let sync = { status: 'off', pending: 0 }
 const syncBus = createEmitter()

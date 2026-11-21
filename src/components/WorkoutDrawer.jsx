@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useTree, statusOf, skillById, STATUS_LABEL } from '../lib/store.js'
+import { useTree, statusOf, valueOf, skillById, setValue, markPracticed, STATUS_LABEL } from '../lib/store.js'
 import {
   FOCUS, WARMUP, SLOT_LABEL, generateWorkout, swapExercise, prescribe, summarize,
 } from '../lib/workout.js'
@@ -30,6 +30,42 @@ function save(w) {
   try { localStorage.setItem(KEY, JSON.stringify(w)) } catch { /* quota */ }
 }
 
+/**
+ * Enter your best set for this exercise. Beats your current best -> saved as a new
+ * PR; otherwise your best is left alone and the exercise is just marked practised.
+ */
+function LogEntry({ unit, logged, onLog, onAgain }) {
+  const [v, setV] = useState('')
+  const n = v.trim() === '' ? null : Math.round(Number(v))
+  const ok = n != null && Number.isFinite(n) && n >= 0
+  const submit = () => { if (ok) { onLog(n); setV('') } }
+  if (logged) {
+    return (
+      <div className="wk-logged">
+        <span>
+          Logged <b>{logged.value} {unit}</b>
+          {logged.pr ? <em className="pr"> new best</em> : <em> best stays {logged.best}</em>}
+        </span>
+        <button type="button" onClick={onAgain}>Log again</button>
+      </div>
+    )
+  }
+  return (
+    <form className="wk-log" onSubmit={(e) => { e.preventDefault(); submit() }}>
+      <input
+        type="number"
+        inputMode="numeric"
+        min="0"
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        placeholder={`best set (${unit})`}
+        aria-label={`Best set in ${unit}`}
+      />
+      <button type="submit" disabled={!ok}>Log</button>
+    </form>
+  )
+}
+
 export default function WorkoutDrawer({ open, onClose, onPick }) {
   if (!open) return null
   return <WorkoutBody onClose={onClose} onPick={onPick} />
@@ -44,6 +80,9 @@ function WorkoutBody({ onClose, onPick }) {
     items: generateWorkout({ skills: tree.skills, progress: tree.progress, where: 'home', focus: 'full' }),
   })
   const [done, setDone] = useState(() => new Set())
+  const [logged, setLogged] = useState({}) // row index -> { value, pr, best }
+  // Targets are frozen when the workout is rolled, so logging a new best mid-session doesn't move the goalposts.
+  const [snap, setSnap] = useState(tree.progress)
   const [stuck, setStuck] = useState(null) // index of a row that had nothing to swap to
   const rollRef = useRef(null)
   useEffect(() => { save(w) }, [w])
@@ -59,6 +98,8 @@ function WorkoutBody({ onClose, onPick }) {
     const focus = next.focus || w.focus
     setW({ where, focus, items: generateWorkout({ skills: tree.skills, progress: tree.progress, where, focus, avoid }) })
     setDone(new Set())
+    setLogged({})
+    setSnap(tree.progress)
     setStuck(null)
   }
 
@@ -66,12 +107,23 @@ function WorkoutBody({ onClose, onPick }) {
     const items = swapExercise({ skills: tree.skills, progress: tree.progress, where: w.where, items: w.items, index: i })
     if (!items) { setStuck(i); return }
     setW({ ...w, items })
+    setSnap(tree.progress)
     setDone((d) => { const n = new Set(d); n.delete(i); return n })
+    setLogged((l) => { const n = { ...l }; delete n[i]; return n })
+  }
+
+  const logSet = (i, skill, value) => {
+    const best = valueOf(skill)
+    const pr = value > best
+    if (pr) setValue(skill, value)
+    else markPracticed(skill)
+    setLogged((l) => ({ ...l, [i]: { value, pr, best } }))
+    setDone((d) => new Set(d).add(i))
   }
 
   const toggle = (i) => setDone((d) => { const n = new Set(d); if (n.has(i)) n.delete(i); else n.add(i); return n })
 
-  const sum = useMemo(() => summarize(w.items, { get: skillById }, tree.progress), [w.items, tree.progress])
+  const sum = useMemo(() => summarize(w.items, { get: skillById }, snap), [w.items, snap])
 
   return (
     <div className="veil workout-veil" onClick={onClose}>
@@ -112,7 +164,7 @@ function WorkoutBody({ onClose, onPick }) {
                   const skill = skillById(it.id)
                   if (!skill) return null
                   const st = statusOf(skill, tree.progress)
-                  const p = prescribe(skill, it.role, tree.progress)
+                  const p = prescribe(skill, it.role, snap)
                   const isDone = done.has(i)
                   return (
                     <li key={`${it.id}-${i}`} className={`wk-item ${isDone ? 'done' : ''}`}>
@@ -146,6 +198,13 @@ function WorkoutBody({ onClose, onPick }) {
                         <p className={`wk-hint ${stuck === i ? 'stuck' : ''}`}>
                           {stuck === i ? 'No other option for this slot' : [ROLE_NOTE[it.role], p.hint].filter(Boolean).join('. ')}
                         </p>
+                        <LogEntry
+                          key={`${it.id}-${i}-${logged[i] ? 'done' : 'open'}`}
+                          unit={p.unit === 'sec' ? 'sec' : 'reps'}
+                          logged={logged[i]}
+                          onLog={(n) => logSet(i, skill, n)}
+                          onAgain={() => setLogged((l) => { const n = { ...l }; delete n[i]; return n })}
+                        />
                       </div>
                       <button type="button" className="wk-swap" onClick={() => swap(i)} title="Swap for another exercise" aria-label={`Swap ${skill.name}`}>
                         <Px name="dice" u={2} />

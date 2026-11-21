@@ -313,6 +313,24 @@ button.tier:active { transform: translateY(2px); }
 .wk-rx b { font-family: var(--title); font-size: 16px; letter-spacing: 0.04em; color: var(--text); }
 .wk-hint { margin-top: 4px; font-size: 13px; color: var(--dim); }
 .wk-hint.stuck { color: var(--gold); }
+.wk-log { display: flex; gap: 8px; margin-top: 10px; }
+.wk-log input {
+  flex: 1; min-width: 0; max-width: 190px; padding: 8px 10px; min-height: 40px;
+  background: var(--panel); border: 3px solid var(--line); outline: 0; font-size: 15px; -moz-appearance: textfield;
+}
+.wk-log input::-webkit-inner-spin-button, .wk-log input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.wk-log input::placeholder { color: var(--dim); font-size: 13px; }
+.wk-log input:focus { border-color: var(--gold); }
+.wk-log button, .wk-logged button {
+  flex: none; min-height: 40px; padding: 0 14px; background: var(--panel-2); color: var(--text-mid);
+  border: 3px solid var(--line-hi); font-family: var(--title); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.wk-log button:hover:not(:disabled), .wk-logged button:hover { background: var(--gold); color: #14121f; border-color: var(--gold); }
+.wk-log button:disabled { opacity: 0.35; cursor: default; }
+.wk-logged { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 14px; color: var(--text-mid); }
+.wk-logged b { color: var(--mastered); font-weight: 600; }
+.wk-logged em { font-style: normal; color: var(--dim); }
+.wk-logged em.pr { color: var(--gold); }
 .wk-swap {
   flex: none; align-self: center; min-width: 54px; min-height: 44px; padding: 4px 6px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
