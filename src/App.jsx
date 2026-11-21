@@ -3,6 +3,7 @@ import Tree from './components/Tree.jsx'
 import Panel from './components/Panel.jsx'
 import Search from './components/Search.jsx'
 import LogDrawer from './components/LogDrawer.jsx'
+import WorkoutDrawer from './components/WorkoutDrawer.jsx'
 import Toast from './components/Toast.jsx'
 import AdaptationOverlay from './components/AdaptationOverlay.jsx'
 import { Px, Wheel } from './components/Pixel.jsx'
@@ -15,6 +16,7 @@ export default function App() {
   const [selected, setSelected] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
+  const [workoutOpen, setWorkoutOpen] = useState(false)
   const [focus, setFocus] = useState(null)
   const [filter, setFilter] = useState('all')
   const [pillar, setPillar] = useState(null)
@@ -22,16 +24,18 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Escape') { setSelected(null); setSearchOpen(false); setLogOpen(false) }
+      if (e.key === 'Escape') { setSelected(null); setSearchOpen(false); setLogOpen(false); setWorkoutOpen(false) }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
         setSearchOpen((s) => !s)
         setLogOpen(false)
+        setWorkoutOpen(false)
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
         e.preventDefault()
         setLogOpen((s) => !s)
         setSearchOpen(false)
+        setWorkoutOpen(false)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -41,6 +45,7 @@ export default function App() {
   const goTo = useCallback((skill) => {
     setSearchOpen(false)
     setLogOpen(false)
+    setWorkoutOpen(false)
     setSelected(skill)
     setFocus({ id: skill.id, t: Date.now() })
   }, [])
@@ -63,13 +68,17 @@ export default function App() {
           <span>ARBOR</span>
         </button>
         <nav className="rail-nav">
-          <button type="button" className={logOpen ? 'on' : ''} onClick={() => { setLogOpen(true); setSearchOpen(false) }} title="Log a PR (Ctrl L)">
+          <button type="button" className={logOpen ? 'on' : ''} onClick={() => { setLogOpen(true); setSearchOpen(false); setWorkoutOpen(false) }} title="Log a PR (Ctrl L)">
             <Px name="pencil" u={3} />
             <span>Log PR</span>
           </button>
-          <button type="button" className={searchOpen ? 'on' : ''} onClick={() => { setSearchOpen(true); setLogOpen(false) }} title="Find a skill (Ctrl K)">
+          <button type="button" className={searchOpen ? 'on' : ''} onClick={() => { setSearchOpen(true); setLogOpen(false); setWorkoutOpen(false) }} title="Find a skill (Ctrl K)">
             <Px name="search" u={3} />
             <span>Search</span>
+          </button>
+          <button type="button" className={workoutOpen ? 'on' : ''} onClick={() => { setWorkoutOpen(true); setSearchOpen(false); setLogOpen(false) }} title="Roll a random calisthenics workout">
+            <Px name="dice" u={3} />
+            <span>Workout</span>
           </button>
         </nav>
         <div className="rail-stats" title={`${stats.pts} / ${stats.max} XP · lifetime ${(vitality * 100).toFixed(1)}%`}>
@@ -101,6 +110,7 @@ export default function App() {
       {selected && <Panel skill={selected} onClose={() => setSelected(null)} onFocus={goTo} />}
       <Search open={searchOpen} onClose={() => setSearchOpen(false)} onPick={goTo} />
       <LogDrawer open={logOpen} onClose={() => setLogOpen(false)} onPick={goTo} />
+      <WorkoutDrawer open={workoutOpen} onClose={() => setWorkoutOpen(false)} onPick={goTo} />
       <Toast />
     </div>
   )

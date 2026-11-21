@@ -26,6 +26,7 @@ Progress is a local notepad: PRs persist in `localStorage` and work offline (ins
 
 - **Drag** to pan, **scroll / pinch** to zoom, **double-click** empty space to zoom in, arrow keys / `+` `-` / `0` when the tree is focused
 - **Ctrl+K** — jump to a skill · **Ctrl+L** — log a PR (search, last session, next unlocks, +1 / tick)
+- **Workout** (dice button in the rail) — rolls a random calisthenics session from your own progress: mostly skills you're building (Unlocked / In progress), at most one Mastered skill kept sharp and one Locked "next unlock" to reach for. Home or Gym, Full body / Push / Pull / Legs + core, swap any exercise. Logic: `src/lib/workout.js`
 - Point at a skill to see its cross-branch prerequisites; click it for the detail panel
 
 ## How it's built
