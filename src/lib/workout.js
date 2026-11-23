@@ -206,7 +206,7 @@ export function prescribe(skill, role, progress) {
   const base = { unit: word }
 
   if (role === 'reach' || cur < u) {
-    return { ...base, hint: `${best}, first tier at ${u}`, mode: 'max', sets: 3, amount: u, rest: hold ? 75 : 90, workSec: hold ? u : u * 3.5 }
+    return { ...base, best: cur, hint: `${best}, first tier at ${u}`, mode: 'max', sets: 3, amount: u, rest: hold ? 75 : 90, workSec: hold ? u : u * 3.5 }
   }
 
   let sets, amount, rest
@@ -225,7 +225,7 @@ export function prescribe(skill, role, progress) {
     rest = cat === 'core' ? 60 : hold ? 75 : cur <= 5 ? 120 : 90
   }
   const hint = role === 'keep' ? `${best}. Easy sets, just keep it sharp` : next ? `${best}, next tier at ${next}` : `${best}, all tiers cleared`
-  return { ...base, hint, mode: 'fixed', sets, amount, rest, workSec: hold ? amount : amount * 3.5 }
+  return { ...base, best: cur, hint, mode: 'fixed', sets, amount, rest, workSec: hold ? amount : amount * 3.5 }
 }
 
 /** Total sets and a rough duration (work + rest, last rest dropped, plus a 4 min warm-up). */
@@ -241,4 +241,57 @@ export function summarize(items, byId, progress) {
   }
   const minutes = Math.max(5, Math.round((sec / 60 + 4) / 5) * 5)
   return { exercises: items.length, sets, minutes }
+}
+
+// ── running a workout (the Strong-style live session) ───────────────────────
+/** "12 reps" / "30 sec" */
+export const fmtAmount = (unit, n) => `${n} ${unit === 'sec' ? 'sec' : 'reps'}`
+
+/**
+ * Target for each set of a live exercise, from last session's sets (`prev`: numbers) and
+ * the prescription frozen when the workout started (`rx`: mode, unit, amount, best).
+ * The calisthenics version of double progression:
+ *  - first time: the prescription (or "max effort" for a next-unlock skill);
+ *  - otherwise beat last time by one step per set, never past your best, because these are
+ *    sub-maximal sets;
+ *  - once every set last time already matched your best, hold your best and make the LAST set
+ *    a go at a new best (like adding weight when every set hit the top of the rep range);
+ *  - mastered "keep sharp" skills just repeat last time.
+ * Returns { targets: string[], hint, up }.
+ */
+export function planFor(rx, role, setsWanted, prev) {
+  const n = Math.max(1, setsWanted)
+  const word = rx.unit === 'sec' ? 'sec' : 'reps'
+  const fixed = rx.mode === 'fixed'
+  const fill = (v) => Array.from({ length: n }, () => v)
+  if (!prev || !prev.length) {
+    return fixed
+      ? { targets: fill(String(rx.amount)), hint: `First time: aim for ${rx.amount} ${word} each set`, up: false }
+      : { targets: fill(''), hint: `Max effort each set. First tier at ${rx.amount} ${word}`, up: false }
+  }
+  const at = (i) => prev[Math.min(i, prev.length - 1)]
+  const step = (v) => (rx.unit === 'sec' ? (v >= 20 ? 5 : 2) : 1)
+  if (role === 'keep') {
+    return { targets: Array.from({ length: n }, (_, i) => String(at(i))), hint: 'Same as last time. Easy, just keep it sharp', up: false }
+  }
+  if (!fixed) {
+    return {
+      targets: Array.from({ length: n }, (_, i) => String(at(i) + step(at(i)))),
+      hint: `Beat last time. First tier at ${rx.amount} ${word}`,
+      up: false,
+    }
+  }
+  const best = rx.best
+  if (prev.every((v) => v >= best)) {
+    return {
+      targets: Array.from({ length: n }, (_, i) => String(i === n - 1 ? best + step(best) : best)),
+      hint: `Every set matched your best of ${best}. Last set: go for a new best`,
+      up: true,
+    }
+  }
+  return {
+    targets: Array.from({ length: n }, (_, i) => String(Math.min(at(i) + step(at(i)), best))),
+    hint: rx.unit === 'sec' ? 'Hold a little longer than last time' : '+1 rep on each set',
+    up: false,
+  }
 }

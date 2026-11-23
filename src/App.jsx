@@ -8,11 +8,13 @@ import Toast from './components/Toast.jsx'
 import AdaptationOverlay from './components/AdaptationOverlay.jsx'
 import { Px, Wheel } from './components/Pixel.jsx'
 import { useTree, useDerived, useSync, weekStats, streakDays } from './lib/store.js'
+import { useSessions } from './lib/sessions.js'
 
 export default function App() {
   const tree = useTree()
   const stats = useDerived()
   const sync = useSync()
+  const { active: liveWorkout } = useSessions()
   const [selected, setSelected] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
@@ -76,7 +78,7 @@ export default function App() {
             <Px name="search" u={3} />
             <span>Search</span>
           </button>
-          <button type="button" className={workoutOpen ? 'on' : ''} onClick={() => { setWorkoutOpen(true); setSearchOpen(false); setLogOpen(false) }} title="Roll a random calisthenics workout">
+          <button type="button" className={`${workoutOpen ? 'on' : ''} ${liveWorkout ? 'live' : ''}`} onClick={() => { setWorkoutOpen(true); setSearchOpen(false); setLogOpen(false) }} title={liveWorkout ? 'Workout in progress: resume' : 'Roll a random calisthenics workout'}>
             <Px name="dice" u={3} />
             <span>Workout</span>
           </button>
